@@ -569,7 +569,7 @@ ORDER BY
     SUM(p.Maas) as MaasToplam
     from Personel p left join  Departmanlar as d on d.Kodu=p.DepKodu
     group by 
-    ISNULL(d.Adi,'Departman Adý Girilmemiþ'),
+    ISNULL(d.Adi,'Departman Adý Girilmemiþ'),  --- aslýnda burdada isnul olma sebebi sonuçta departman adý girilmeyenlerinde bi grubu olmalýki sayac onada calýssýnn
     p.Cinsiyet
     order by
     [Departman Adlarý],
