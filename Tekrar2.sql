@@ -47,5 +47,51 @@ HAVING
 
     --S2: Cinsiyeti Erkek olan personellerin departmanlara göre sayýlarýný getiren sql
 
+    select d.Adi, COUNT(p.Cinsiyet) as ErkekSayýsý from   Personel p inner join Departmanlar as d on d.Kodu=p.DepKodu
+    group by d.Adi, p.Cinsiyet having p.Cinsiyet='E'
+
+    --yukardaki kod departmanlarý  ve cinsiyetleri kovalara ayýrýr yani gereksiz yere kadýnlarýda gruplar ardýndan sayým iþleminide yapar
+    --en sonra having sebebiyle kadýnlarý atar  sonucta doðru cýktý verir herþey yolunda gibi ancak gereksiz yere iþlemler yapýlmýþ olur o yüzden 
+    --where ile filtreleme yapýp sonra gruplayýp sonra saydýrmalýyýz aþaðýdaki kod daha iyidir.
+    --önemli bilgi: yukardaki koddan group by kýsmýndaki p.Cinsiyeti silersek sorgu hata verir çünkü gruplama yapýlanlar arasýndan havingi kullanabiliriz
+    --cinsiyeti gruplamazsak sql kafasý karýþýr ama farkettiysen aþaðýdaki kodda group by da cinsiyet olmasada  cinsiyet=E yapabildik bunun nedeni
+    --zaten gruplamadan önce kadýnlarý where ile attýk ayrýca where kullanýnca zaten havinge gerek kalmaz cunku kadýnlarý atýnca geriye zaten sadece
+    --erkekler kalýr kýsaca 'HAVÝNG' gruplama ve count gibi iþlemlerden sonra  çalýþan bir filtrelemedir o yüzden bu soruda having verimsiz olcaktýr
+    --bu aþçýya birkaç çeþit yemek yaptýrýp sadece 1 ini yicez diyip diðerlerini çöpe atmaya benzer
+
+    select d.Adi, COUNT(*)as ErkekSayisi  from Personel p  inner join Departmanlar as d on d.Kodu=p.DepKodu where p.Cinsiyet='E' group by d.Adi
+    --sadece erkekleri getirirsek sonrada gruplarsak böylece gereksiz iþlemler yapýlmamýþ olur zaten sayýcý sadece erkek personelleri
+    --sayacak çünkü her satýrdaki personel erkek olacak biz satýr sayýsýný alsak erkek sayýsýný almýþ gibi oluruz öyle düþün
+
+    select p.* from Personel p
+    select d.* from Departmanlar d
+
+    --S3: cinsiyeti erkek olan personellerin departmanlarýna göre sayýlarýný getiren ve PerSayisi 3 ve daha fazla departmanlarýný   listeleyen sql
+
+    select d.Adi, COUNT(*) as PersonelSayýsý from Personel as p inner join  Departmanlar as d on p.DepKodu=d.Kodu
+    where p.Cinsiyet='E' group by d.Adi having COUNT(p.Cinsiyet)>2
+
+    -- kod tamamen doðrudur önce inner join ile depkodu olmayanlar elendi where ile kadýnlar elendi ardýndan  departmanlarý   grupladý zaten sadece erkek
+    --ler kaldý içinde ardýndan  cinsiyetlerini saydý sadece erkek oldugu için 2 satýrdan fazla olan departmana izin verdi
+    --ardýndanda selectte  filtrelemelerden geçenler yazýlmaya baþlandý önce d.Adi ile bilgi iþlemi yazdý ve count ise filtrelemeden geçen hangisi
+    --ise onu saydý yani  selectteki count d.Adi kýsmýnda yazaný deðil zaten  fromdan sonraki aþamada filtrelemeden geçeni saydý d.Adi ise filtrelemeden
+    --geçen bilgi iþlem oldugu için onu yazdýrdý.
+
+     select p.* from Personel p
+
+     --s4: adýnda e veya h geçen personellerin departmanlara göre sayýlarýný getiren sql
+
+     select d.Adi, COUNT(*) as AdýndaEveHOlanlarýnSayisi from Personel p inner join Departmanlar as d on d.Kodu=p.DepKodu
+    where p.Ad like '%e%' or p.Ad like '%h%' group by d.Adi
+
+    --yukardaki kodda gruplamada cinsiyeti yazsak gereksiz yere ayný departmaný alt alta yazýp 2 deðer verecekti ama tek satýrda deðer verse yeterli
+    /*Filtreleme, bir grubun hesaplanmýþ sonucuna (COUNT > 5 gibi) deðil de, satýrýn ham verisine (Ad sütununun içeriði gibi) yapýlýyorsa, 
+    bu filtre HER ZAMAN WHERE ile yapýlýr. where gruplamadan önce iþleme girer*/
+
+     select p.* from Personel p
+
+
+    
+
 
     
