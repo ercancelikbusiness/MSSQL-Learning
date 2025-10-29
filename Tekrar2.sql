@@ -85,7 +85,7 @@ HAVING
 from Personel p  inner join Departmanlar as d on d.Kodu=p.DepKodu
 group by d.Adi, p.Cinsiyet  
 having p.Ad like '%e%' or p.Ad like '%h%'
--- having hatalýdýr aþaðýda nedeni mevcut
+-- having hatalýdýr aþaðýda nedeni yazdým
 
 
      select d.Adi, COUNT(*) as AdýndaEveHOlanlarýnSayisi from Personel p inner join Departmanlar as d on d.Kodu=p.DepKodu
@@ -114,7 +114,7 @@ SQL, o TEK "Ýnsan Kaynaklarý Grubu" satýrýna bakar ve sorar: "Senin p.Ad deðerin
     ama whereli örnekde zaten  içinde sadece e ve h li olanlar grup olusturur dolayýsýyla geriye sadece satýr sayma kalýr
     
     peki diceksinki where dede çökertme oluyor orda nasýl sayým yaptý aslýnda orda olay where kýsmýnda zaten bitmiþ oluyor ardýndan sadece grup sayýsýný
-    alsak bize yeterli yani gruplama sadece e ve h li olanlar üzerinden kuruldugu için o gruba ait kiþi sayýsý bize yeterlidir zaten cevapta budur 
+    alsak bize yeterli yani gruplama sadece e ve h li olanlar üzerinden kuruldugu için o gruba ait kiþi sayýsý(satýr) bize yeterlidir zaten cevapta budur 
     ekstra iþlem yine yapýlamaz ama zaten yapýlmasýnada gerek kalmamýþtýr sonuç çýkmýþtýr bunun senaryo þeklinde  altta yazalým:
     
     Senaryo 1: HATA VEREN HAVING Sorgunuz
