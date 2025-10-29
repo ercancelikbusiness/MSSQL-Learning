@@ -81,6 +81,13 @@ HAVING
 
      --s4: adýnda e veya h geçen personellerin departmanlara göre sayýlarýný getiren sql
 
+     select d.Adi, COUNT(*) 
+from Personel p  inner join Departmanlar as d on d.Kodu=p.DepKodu
+group by d.Adi, p.Cinsiyet  
+having p.Ad like '%e%' or p.Ad like '%h%'
+-- having hatalýdýr aþaðýda nedeni mevcut
+
+
      select d.Adi, COUNT(*) as AdýndaEveHOlanlarýnSayisi from Personel p inner join Departmanlar as d on d.Kodu=p.DepKodu
     where p.Ad like '%e%' or p.Ad like '%h%' group by d.Adi
 
@@ -89,6 +96,64 @@ HAVING
     bu filtre HER ZAMAN WHERE ile yapýlýr. where gruplamadan önce iþleme girer*/
 
      select p.* from Personel p
+
+     /* 4. soruda having calýsmama nedeni :
+     Hata veriyor, çünkü GROUP BY komutu o kovadaki 5 farklý p.Ad deðerini TEK BÝR SATIRA ÇÖKERTÝR (COLLAPSE) ve HAVING bu tek satýra bakar.
+
+SQL'in ne gördüðünü adým adým tekrar düþünelim:
+JOIN yapýldý.
+GROUP BY d.Adi çalýþtý.
+SQL, 'Ýnsan Kaynaklarý' grubunu oluþturdu. Bu anda SQL için artýk 5 ayrý personel (Gülizar, Sevde, Hilal, Ebru, Orhan) yoktur. Sadece 
+TEK BÝR SATIR vardýr: Adý 'Ýnsan Kaynaklarý' olan bir "Grup".
+COUNT(*) bu grup için çalýþýr ve "5" deðerini hesaplar.
+HAVING p.Ad like '%e%' komutu gelir.
+SQL, o TEK "Ýnsan Kaynaklarý Grubu" satýrýna bakar ve sorar: "Senin p.Ad deðerin nedir?"
+ÝÞTE HATA ANI: O tek temsili satýrýn p.Ad deðeri nedir? 'Gülizar' mý? 'Sevde' mi? 'Hilal' mi? 'Ebru' mu? 'Orhan' mý? Hiçbiri ve hepsi. Bu bir BELÝRSÝZLÝKTÝR.
+    SQL'in HAVING komutu "grubun içine bakýp Sevde ve Hilal'i ayýklayayým" diye bir iþlem yapmaz. HAVING sadece o grubun temsili tek satýrýna 
+    bakar ve o satýrýn p.Ad deðerini sorar. Tek bir deðer bulamadýðý için de size hata verir.
+    ama whereli örnekde zaten  içinde sadece e ve h li olanlar grup olusturur dolayýsýyla geriye sadece satýr sayma kalýr
+    
+    peki diceksinki where dede çökertme oluyor orda nasýl sayým yaptý aslýnda orda olay where kýsmýnda zaten bitmiþ oluyor ardýndan sadece grup sayýsýný
+    alsak bize yeterli yani gruplama sadece e ve h li olanlar üzerinden kuruldugu için o gruba ait kiþi sayýsý bize yeterlidir zaten cevapta budur 
+    ekstra iþlem yine yapýlamaz ama zaten yapýlmasýnada gerek kalmamýþtýr sonuç çýkmýþtýr bunun senaryo þeklinde  altta yazalým:
+    
+    Senaryo 1: HATA VEREN HAVING Sorgunuz
+
+GROUP BY d.Adi: SQL 'Ýnsan Kaynaklarý' kovasýný alýr.
+
+Kovaya Atýlanlar: 'Gülizar', 'Sevde', 'Hilal', 'Ebru', 'Orhan' (5 kiþi).
+
+Çökertme: Kova kapanýr. Artýk o 5 kiþi görünmez. Kovanýn üstünde bir etiket vardýr: "Grup Adý: Ýnsan Kaynaklarý", "Ýçindeki Sayý: 5".
+
+HAVING p.Ad LIKE '%e%': SQL gelir ve bu kapalý kovaya sorar: "Senin p.Ad deðerin nedir? 'e' içeriyor mu?"
+
+HATA: Kova cevap veremez. Kovanýn tek bir p.Ad deðeri yoktur. Ýçinde 5 farklý deðer vardý ama artýk kapalý. Bu bir belirsizliktir.
+
+Senaryo 2: DOÐRU ÇALIÞAN WHERE Sorgunuz
+
+WHERE p.Ad LIKE '%e%' OR p.Ad LIKE '%h%': SQL daha kovalarý çýkarmadan, masadaki tüm personeli filtreler. 'Gülizar' ve 'Burak' gibi isimleri çöpe atar.
+
+GROUP BY d.Adi: SQL 'Ýnsan Kaynaklarý' kovasýný alýr.
+
+Kovaya Atýlanlar: Sadece WHERE filtresinden geçenler kovaya atýlýr: 'Sevde', 'Hilal', 'Ebru', 'Orhan' (4 kiþi).
+
+Çökertme: Kova kapanýr. Artýk o 4 kiþi görünmez. Kovanýn üstünde bir etiket vardýr: "Grup Adý: Ýnsan Kaynaklarý", "Ýçindeki Sayý: 4".
+
+SELECT d.Adi, COUNT(*): SQL gelir ve bu kapalý kovanýn etiketini okur:
+
+d.Adi nedir? -> 'Ýnsan Kaynaklarý' (Belirsizlik yok).
+
+COUNT(*) nedir? -> '4' (Belirsizlik yok).
+
+BAÞARILI: Sonuç ekrana yazdýrýlýr.
+
+Özetle: Her iki senaryoda da "çökertme" (gruplama) var.
+
+Hata veren sorguda sorun, çökertme bittikten sonra o grubun içindeki ham bir detayý (p.Ad) sormaktýr.
+
+Doðru sorguda sorun yok, çünkü çökertme bittikten sonra sadece grubun kendisiyle ilgili net bilgileri (d.Adi ve COUNT(*)) istiyorsunuz.
+Filtrelemeyi (p.Ad) ise en baþta, çökertme baþlamadan WHERE ile hallettiniz.
+*/
 
 
     
