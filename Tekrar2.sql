@@ -155,6 +155,102 @@ Doðru sorguda sorun yok, çünkü çökertme bittikten sonra sadece grubun kendisiyle
 Filtrelemeyi (p.Ad) ise en baþta, çökertme baþlamadan WHERE ile hallettiniz.
 */
 
+select  distinct p.Maas from Personel p -- distinct  birþeyden fazla varsa onu tek gösterime indirger 77k 2 adetse 1 kere belirtir.
+
+--*****Sub query/Alt Sorgu  ( birden fazla select ifadesinin oldugu sorgulara alt sorgu denir***
+
+--S1: Personel verilerini departman isimleri ile birlikte getiren SQL
+
+select p.*, d.Adi from personel p  left join Departmanlar as d on d.Kodu=p.DepKodu -- bunla çözdük
+
+-- aþaðýdaki sorgula ile çýktýlar nasýl oluyor anla yani bir sütun yazýnca tablodaki o sütuna ait hepsi geliyor
+--tek bir satýrlý sütun için where ile yaptýk yani bu mantýðý  önce kafanda oturttur
+
+select  d.Adi from personel p  left join Departmanlar as d on d.Kodu=p.DepKodu -- left ile alttaki farký anla
+
+--sadece departman adlarýný getirmiyor sütun sadece d.Adi olabilir ayný zamanda tüm personel tablosunu getiriyor baðlantý üzerinden
+--personelde kod  eþleþiyorsa departman ismini getiriyor null olanlarý null býrakýyor inner join olsa  nullar haric ayný tablo olurdu
+select  d.Adi from personel p  inner join Departmanlar as d on d.Kodu=p.DepKodu
+
+select d.Adi from Departmanlar d
+
+select d.Adi  from Departmanlar d  where d.Kodu='D1'
+
+--sub query ile çözüm
+
+select p.* , (select d.Adi From Departmanlar d where d.Kodu=p.DepKodu)as depAdi   from Personel p -- subquery çözümð
+select p.*, d.Adi as depAdi from personel p  left join Departmanlar as d on d.Kodu=p.DepKodu -- bizim çözümle kýyasla
+
+--hiçbir fark yoktur subquery satýr satýr calýstýgý için  where d.Kodu=p.DepKodu þu þekilde sql tarafýndan okunur;
+--from personel oldugu için ilk satýrý yazarken burak'ýn DepKodu D1 dir  yani  subquery de yani () içinde "where d.Kodu='D1'" olarak algýlayacaktýr buda departmanlar tablosunda bilgi iþlem demektir
+--o halde subquery () parantez içinin çýktýsý direkt  bilgi iþlemi getircektir komple parantez içi o satýr için  bilgi iþlemi temsil eder
+-- ve parantezden çýkýp yoluna devam edecektir sonra öteki satýr içinde ayný iþlemler tekrarlanacaktýr  kýsaca her satýrda ayný
+--iþlemi yapacaktýr yani subquery ile  satýr satýr(row by row) iþlem yapmýþ olduk for döngüsü gibi düþün..  subquery içindeki
+--p.DepKodu  her satýr için o satýrdaki personelin DepKodunu alýcaktýr d.Kodu'na atayacaktýr.
+--yani burda where d.Kodu =p.DepKodu dememizin nedeni 2 tablo bu konuda uyumlu ama baþka birþeyde yapabilirdik
+--d.Adý=p.Adý yapsaydýn sorgu saçma olurdu ama teoride calýsýrdý bilgiiþlem =burak sonraki satýrda özkan þeklinde giderdi anla diye söyledim
+
+select d.* from Departmanlar d
+
+select p.*, (select d.Adi from Departmanlar d where d.Kodu=p.DepKodu)as DepAdý from personel p
+
+
+--S2: ilçe verilerini il isimleri ile birlikte getiren SQL
+select  p.* from iller p
+select d.* from ilceler d
+
+select i.*, ( select iller.adi  from iller where iller.ilkodu=i.ilkodu  ) as ilIsýmlerý  from ilceler i
+
+--tabloya bakýyorsun ortak sütun hangisi olabilir onu bulcan  kýsaca önce tablolar birbiriyle uyumlu olmalý zaten
+
+select ilceler.Id,ilceler.ilkodu, (select iller.adi  from iller where iller.ilkodu=ilceler.ilkodu)as ilIsýmleri ,ilceler.adi  from ilceler 
+
+--S3: En yüksek Maas verisine sahip olan personel/personelleri getiren SQL( ayný maaþa sahip birçok  insan olabilir top kullanýlmaz )
+
+-- önce alttaki kodlarýn farklarýný anla  Ercan Diyince ercanla ilgili satýrýn  tüm sütunlarýný getiriyor 
+select p.* from Personel p  where p.Ad = 'Ercan'
+--alttakinde tüm satýrlarýn tüm sütunlarýný getiriyordu
+select p.* from Personel p  
+
+select p.* from Personel p  where p.Maas= (select  MAX(p.Maas) from Personel p)
+
+-- mantýðý çok kolay anlýcaz þimdi  açýklýyorum : amacýmýz en yüksek maasý bulmak deðilmi sonucta 1 den fazla kiþide olsa
+--en yüksek maas 1 tanedir.. e o halde en yüksek maasý bulan kodu elde edelimki sonra o maasa sahip olanlarý istiyebiliriz
+-- () yani subquery içindeki kod bize en yüksek maaþý yazdýran koddur çýktýsý sadece en yüksek maasýn sayýsal deðeridir
+-- o halde kodumuz þuanda þu hale geldi  select p.* from Personel p  where p.Maas= 231250
+-- yukardaki 231250 þuanki en yüksek personelin maas deðeridir ilerde deðiþtirebiliriz ama þuan 231250 dir. gördüðün gibi
+-- bize bu maasý alan personeli getir kodu mevcut oldu bu maasý birden fazla kiþi alsaydý p.* sayesinde hepsini yazdýracaktý ama tek kiþi
+-- oda yiðit
+
+select p.* from Personel p  where p.Maas= 77000.0000 -- mesela 770000 olan kýsým subquery nin nihai sonucu olsaydý  gördüðün gibi
+--cýktý birden fazla kiþi oluyor
+
+
+select p.* from Personel p  where p.Ad=(select  p.Ad from Personel p where p.Ad='Ercan')
+
+-- yukarda abuk subuk bir örnek yazdým subquery olayýný anlamak için.
+--subquery sonucu yani: select  p.Ad from Personel p where p.Ad='Ercan' bunun sonucu yine Ercan'dýr
+--o halde ana sorgu select p.* from Personel p  where p.Ad='Ercan' gibi olacaktýr yani bize Ercanla ilgili olan tüm sütunlar gelir
+
+--S4: departmanlarý personel sayýlarý ile  birlikte listeleyen sql
+
+select d.* from Departmanlar d
+select p.* from Personel p
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
     
 
