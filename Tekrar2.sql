@@ -341,6 +341,108 @@ FROM Personel
 WHERE Maas < @OrtalamaMaas;
 
 
+--S6 illeri ilçe sayýlarý ile birlikte getiren sql
+
+select i.* from iller i
+select ic.* from ilceler ic
+
+
+select i.*,(select COUNT(*) from ilceler ic where ic.ilkodu = i.ilkodu) as ilceSayisi  from iller i
+
+--s7 bütün departmanlarý personel sayýlarý ile birlikte getiren sql
+
+select d.* from Departmanlar d
+
+select d.* ,(select COUNT(p.Id) from Personel p where p.DepKodu = d.Kodu) as PerSayisi from Departmanlar d
+
+--yukardaki kodu türkçeye çeviriyorum:   d.* ile sýrayla tüm departmanlarýn sütunlarýný satýr satýr (sýrayla) olacak þekilde ekrana
+--yazdýracak ancak her satýrda subq de çalýþacak ilk satýrda bilgi iþlem  tüm sütunlarýyla yansýr  ve d.* dan sonra subq oldugu için
+--en sonda bir sütun daha vardýr(PerSayisi) iþte bu sütunda where p.DepKodu = D1  uygulanýr çünkü d.* ýn ilk satýrý bilgi iþlem idi onunda d.Kodu D1
+--oldugu için where p.Depkodu = D1 buda D1 olanlarý getir demektir count personel tablosunda  D1 olanlarý sayar ve bir sonuc döndürür bu 4 dür sonra 
+--ilk satýr tamamen bitmiþtir sonra  d.* tüm tabloyu satýr satýr yazdýrýyor demiþtik yani 2. satýra muhasebeye geçeriz ayný iþlemler onun
+--içinde gerçekleþecektir böyle sýrayla gider. burda ince nüans sum count gibi  fonksiyonklar tablonun geneline bakýp bir sonuç döndürebiliyor
+--ama onun haricinde satýr satýr ilerlenmektedir.
+
+
+--S8: Departmanlarýn tüm bilgilerini personel maas toplamlarý ile birlikte getiren sql
+
+select d.* ,(select SUM(p.Maas) from Personel p where p.DepKodu =d.Kodu) as TumCalýsanlarýnMaasToplamý from Departmanlar d
+
+/* yukardaki kodun türkçesi sýrayla tüm departmanlarý p.* ile satýr satýr yazdýrýcak her satýrda o departmanýn kodu deðiþeceði için
+subq daki d.Kodu güncellenecek p.DepKodu da o koda göre iþlem yapcak buraya kadar artýk ezberledik zaten þimdi sonra olan þu:
+depkodu d1 olan birden fazla personel oldugu için sum ibaresi hepsini toplucak ve ilk satýr iþlemi tamamlanacak bilgi iþlem yanýna
+toplam ile personelleri maasý yazcak sýrayla tüm departmanlarda uygulanacak null olanlarý null olarak yazacak ancak bunu tekrar1 deki
+isnull fonksiyonuyla sýfýrda yapabiliriz*/
+
+--d.* yerine  istediðimiz sütunlarýda alabilirdik ayrýca isnull ile yaptým nullarý sýfýr yansýtýcak
+
+select d.Kodu,d.Adi ,isnull((select SUM(p.Maas) from Personel p where p.DepKodu =d.Kodu),0) as TumCalýsanlarýnMaasToplamý from Departmanlar d
+
+
+
+
+--S9  departmanlarý toplam personel sayýsý ve toplam maas deðerleri ile birlikte getiren sql
+
+select
+d.*,
+(select COUNT(p.Id) from Personel p where p.DepKodu=d.Kodu)as PerSayisi,
+(SElect sum(p.Maas) from personel p where p.DepKodu=d.Kodu)as MaasToplam
+from Departmanlar d
+
+--s10 ilçe isminde A Harfi geçen illere ait ilçe sayýlarýný getiren sql
+
+select ic.* from ilceler ic
+
+select i.adi , COUNT(ic.adi) from iller i left join ilceler ic on i.ilkodu=ic.ilkodu  where  ic.adi like '%a%' group by i.adi
+
+--yukarda left join ile yaptým ancak  inner join gibi yani  adýnda a bulunan ilçeleri olanlarý yazdýrýr çünkü where komutu joinden
+--hemen sonra calýsacak ve filtreleme yapýcak bu yüzden left join anlamsýz hale gelir aþaðýdaki gibi direkt join  iþlemine koþul ekle
+--çünkü where  þartý saðlamayaný çöpe atar ancak join iþlemleri  þart saðlanmazsa null yazar  ama yinede tabloda gösterir çünkü
+--soldaki iller tablosunun yapýsýný korumak zorundayým der ve herþeyi gösterir iþte where ile join farký budur burda ekstradan
+--join iþlemindede filtreleme vb yapýlabildiðini gördük  birden fazla yapýlacak filtrelemeler and veya or gibi operatorlerle saðlanýr
+--bu wheredede böyledir joindede böyledir. ama herþeyin yazdýrýlmasýný istiyorsan where kullanma ancak subq ile aþaðýda bir örnek
+--yapcam orda where kullanýldýgý halde left join gibi herþeyi yazdýrýcak  bunu onun altýna yazýcam
+
+SELECT
+    i.adi,
+    COUNT(ic.adi) AS IlceSayisi -- Sadece eþleþen ilçelerin 'adi' sütununu say
+FROM
+    iller i
+LEFT JOIN
+    ilceler ic ON i.ilkodu = ic.ilkodu AND ic.adi LIKE '%a%' -- Filtre JOIN'in parçasý olmalý
+GROUP BY
+    i.adi;
+
+
+
+select i.adi , (select COUNT(*)  from ilceler ic where ic.ilkodu=i.ilkodu AND ic.adi like '%a%')AS IlceSayisi from iller i
+--yukardaki kod ayný left join gibi  herþeyi gösterecektir çünkü satýr satýr devam ediyor yani bu left joinli örneðimizle ayný çýktý verir
+-- ilk left joinli örnekte where kullanmak hata demiþtik ama burda kullandýk  çünkü  bu þundan kaynaklanýyor. where komutu subq içinde
+--yani iller zaten sýrayla hepsi caðýrýlýcak onu engelleyecek bir koþul yok sadece  diðer sütunda where var ve oda gelen verileri
+--deðerlendiricek. eðer a yoksa sayac onu 0 sayýcak dolayýsýyla il hertürlü geleceði için yan sütuna 0 yazýp geçicek ama hertürlü
+--gösterilecek
+
+
+
+--S11  Ankara adana bayburt malatya illerine ait ilçe isminde A harfi geçen illere ait ilçe sayýlarý toplamýný getiren sql
+
+select i.adi,(select COUNT(*) from ilceler ic where ic.ilkodu=i.ilkodu and ic.adi like '%a%')  from iller i 
+where i.adi='Ankara'or i.adi='Adana'or i.adi='Bayburt'or i.adi='Malatya'
+
+-- yada bu formatta olur::: where i.adi in ('Ankara','Adana','Bayburt','Malatya')
+
+--yukardan anlayacaðýn üzere bir mantýðý daha oturttuk. where den sonra i.adi dedik selectte tekrar i.adi dedik saçma gibi geldi
+--ama burda nüans þu mesela selecetten sonra i.* deseydik
+--where ile i.adý koþullarýna uyanlar    bu 4  il isimlerine ait olan tüm sütunlar gelirdi çünkü from iller diyoruz
+--ayrýca bu illere ait tüm veriler i.* demesek bile   örneðin il kodu vb saklanmýþ olacaktýr sadece selectteki yazana göre o veriyi getiricek
+--ama hafýzada tüm verilerini tutucak , bunun kanýtý subq deki  where eþitliðinden anlýyoruz zaten  
+--yani  select ile i.adi dememiz sadece adýný göstersede
+--where de yaptýklarýmýz bu 4 ilin tüm sütun verilerinin tutuldugunu  gösterir çünkü from iller ibaresi hepsini tutacaktýr
+--yani bu nüansý  unutma yani selectten sonra sadece i.adi yazdýk wheredede i.adi diyip sadece il isimleri yazdýk diye düþünme
+-- son olarak subq içinde sayac  gruplama yapmadan nasýl sayýyor diye kafan karýþmasýn subq de where ilkodu=ilkodu ile zaten 
+--atýyorum 01 ilinin tüm verilerini getirtiyoruz ve ilcesinde a geçenlerin hepsini sayýyoruz yani tüm iþlem zaten tek satýrda o il için
+--bitiyor dolayýsýyla gruplamaya gerek kalmýyor
+
 
 
 
