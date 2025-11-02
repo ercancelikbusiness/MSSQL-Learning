@@ -440,7 +440,8 @@ where i.adi='Ankara'or i.adi='Adana'or i.adi='Bayburt'or i.adi='Malatya'
 --where de yaptýklarýmýz bu 4 ilin tüm sütun verilerinin tutuldugunu  gösterir çünkü from iller ibaresi hepsini tutacaktýr
 --yani bu nüansý  unutma yani selectten sonra sadece i.adi yazdýk wheredede i.adi diyip sadece il isimleri yazdýk diye düþünme
 -- son olarak subq içinde sayac  gruplama yapmadan nasýl sayýyor diye kafan karýþmasýn subq de where ilkodu=ilkodu ile zaten 
---atýyorum 01 ilinin tüm verilerini getirtiyoruz ve ilcesinde a geçenlerin hepsini sayýyoruz yani tüm iþlem zaten tek satýrda o il için
+--atýyorum 01 ilinin tüm verilerini getirtiyoruz ('Ankara' satýrý için çalýþýr, Ankara'nýn 'a' içeren ilçe sayýsýný bulur (örn: 12). sonra adana için falan)
+--ve ilcesinde a geçenlerin hepsini sayýyoruz yani tüm iþlem zaten tek satýrda o il için
 --bitiyor dolayýsýyla gruplamaya gerek kalmýyor
 
 
