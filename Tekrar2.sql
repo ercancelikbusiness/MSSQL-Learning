@@ -232,11 +232,113 @@ select p.* from Personel p  where p.Ad=(select  p.Ad from Personel p where p.Ad=
 --subquery sonucu yani: select  p.Ad from Personel p where p.Ad='Ercan' bunun sonucu yine Ercan'dýr
 --o halde ana sorgu select p.* from Personel p  where p.Ad='Ercan' gibi olacaktýr yani bize Ercanla ilgili olan tüm sütunlar gelir
 
---S4: departmanlarý personel sayýlarý ile  birlikte listeleyen sql
+--S4: departmanlarý personel sayýlarý ile  birlikte listeleyen sql ****** önemli bilgiler içerir *****
 
 select d.* from Departmanlar d
 select p.* from Personel p
 
+--aþaðýda subquerysiz yazýlmýþ kod var ama önce þunu bilmeliyiz;
+
+select p.* from personel p --  dediðimizde aslýnda sql bu tablonun tamamýný yazdýrýyor diye ezberledik ama aslýnda þöyle oluyor
+                           -- tablonun aynýsý geliyor ama satýr satýr tüm sütunlar geliyor , aslýnda her sql  satýr satýr ilerler yani;
+                           -- ilk baþta ilk personelin id si ismi soy ismi maasý vb ilk satýrý bitiriyor sonra öteki personele
+                           --geçiyor. dolayýsýyla subquery yazarken her satýrda o kiþinin verilerini subquery içine atýyoruz onunla
+                           --senkronize ilerliyor böyle düþününce mantýk oturuyor yani sadece subquery de satýr satýr gitmiyor. 
+SELECT
+    d.Adi AS DepartmanAdi,
+    COUNT(p.Id) AS PersonelSayisi 
+FROM
+    Departmanlar AS d  -- 1. Ana tablo olarak Departmanlar'ý seç
+LEFT JOIN
+    Personel AS p ON d.Kodu = p.DepKodu -- 2. Personeli sola (Departmanlar'a) baðla
+GROUP BY
+    d.Adi
+
+    -- yukarda olay þöyle oluyor, biz gruplama yaptýðýmýz için sayaç her grubu bir kez sayacak  ve her grup ismi bi kere yazdýrýlacak
+    -- ve  sýrayla olacak ilk  departman bilgi iþlem bu yazcak zaten sayacda bunun içindeki p.id leri saymýþ olacak
+    --yani aslýnda group by adi ile arka planda sanal bir ayrý tablo oluþuyor bu tabloda her bir kovanýn d.adi mevcut
+    --dolayýsýyla her bir d.adi nin  id leri ayný kovada oluyor selectten sonraki d.adi ve count sadece bunlarý okumuþ oluyor
+    -- kýsaca biz bunu en baþtan beri farklý yorumluyormuþuz yani d.Adi'na göre count sayýyor falan zannediyordu aslýnda öyle deðil
+    --group by ile oluþan sanal tablo her bir d.Adi nin ayný gruplar olarak oluþturduðu için  ve selectler belli oldugu için
+    --d.Adi = bilgi iþlem ise onun kovasý zaten hazýr  count id si zaten çokdan hesaplanmýþ oluyor sadece ekrana yazdýrmýþ oluyoruz
+
+
+--þimdi  subquery ile yapacaðýz ve artýk sql in herþeyi p.* gibi ifadelerde dahil, tüm sql kodlarý satýr satýr
+--ilerlediðini mantýgýmýza oturttuk
+
+--aþaðýda birden fazla kod yazýcam aslýnda hepsi ayný þey mantýðý daha iyi anlarsýn
+
+select d.*, (select COUNT(*) from Personel p where p.DepKodu=d.Kodu) as PerSayisi from Departmanlar d left join Personel p on p.DepKodu=d.Adi
+
+select d.*, (select COUNT(*) from Personel p where p.DepKodu=d.Kodu) as PerSayisi from Departmanlar d 
+
+select d.Adi, (select COUNT(p.Id) from Personel p  where p.DepKodu=d.Kodu) as PerSayisi from Departmanlar d
+
+/*
+birincisinde left join yazdýk ama gerek yok çünkü satýr satýr iþlem yaparken zaten birbiriyle iletiþimde olacak bu iki tablo,
+bunuda subq içindeki where ile zaten saðlýyor dolayýsýyla left join inner join burda cok gereksiz olur
+ayrýca ilk select d.* burda ilk departmanýn tüm sütunlarý geliyor ardýndan son sütunda subq var ve buda personele baðlanýyor
+ortak sütun hangileriyse where ile bunlarý eþitliyoruz yani aslýnda bu baðlama gibi ama aslýnda baðlama deðil süreç þöyle oluyor=
+d.* ile ilk departman  olan bilgi iþlemin tüm sütunlarý geliyor ardýndan  diðer sütun subq oldugu için ona geçtiðimizde
+where içinde p.DepKodu = 'D1' oluyor çünkü d.* ile gelen ilk satýrýn d.Kodu = D1 idi dolayýsýyla where ile p.DepKodu= D1 olan
+personeller geliyor ve count oldugu için hepsini sayýyor  4 kayýt oldugu için sayac 4 sonucunu veriyor yani gruplama bile yapmamýza
+gerek kalmamýþ oldu. ardýndan  bu satýr bitiyor ve 2. satýra geçiyor  önce d.* calýsýyor Muhasebenin tüm sutunlarýný getiriyor.
+ardýndan yine subq geçiyor ve orda where p.DepKodu=D2 oluyor  ve  p.DepKodu D2 olan herkesi sayýyor ekrana yazýyor bu þekilde
+devam ediyor.
+*/
+
+
+--s5: ortalama maaþýn altýnda ücret alan personelleri getiren sql
+
+/*
+Bu, SQL'deki en klasik ve en güzel sorulardan biridir.
+
+Sýrayla her iki yöntemi de inceleyelim:
+
+1. Yöntem: Subquery'li Çözüm (Standart ve Doðru Yol)
+Bu soruyu çözmek için bir alt sorgu (subquery) kullanmak en doðal, en okunabilir ve en standart yoldur.
+
+Mantýk: SQL'de WHERE Maas < AVG(Maas) yazamazsýnýz, çünkü WHERE komutu satýr satýr çalýþýr ve o anda ortalamanýn kaç olduðunu bilemez.
+
+Bu yüzden iki adýma ihtiyacýmýz var:
+
+Önce ortalama maaþý bul.
+
+Sonra her personelin maaþýný bu ortalama ile karþýlaþtýr.
+
+dolayýsýyla subquerysiz bu soruyu çözemeyiz ancak TSQL kullanarak çözebiliriz onu en altta yapacaðým
+subquerysiz çözememe nedenimiz hem whereden sonra hemde selectten sonra þu iþlemi direkt yazamýyoruz : (p.maas)<(SUM(p.Maas)/COUNT(p.Id))
+yada (p.maas)<(AVG(p.Maas)) yani bunu tek satýrda bu þekilde yazmaya sql izin vermez çünkü.
+ayrýca where den sonra AVG alma gibi bir iþlem yapýlamaz çünkü  where hazýr birþeyi getirmektedir.  basit matematiksel iþlem hariç
+birþey yapamýyoruz ortalama alamaz çünkü ortalama için tek tek tüm maaslar hesaplanmalý where ise satýr satýr iþlem yapmaktadýr
+*/
+
+
+
+
+
+select  p.*  from personel p    where p.Maas< (Select SUM(p.Maas)/COUNT(p.Id)  from Personel p)
+
+--burda iþlemi bölmüþ olduk whereye sadece satýr satýr kontrol etmek düþtü örneðin  getirmesi gereken maaþ ortlama maasýn altýndakiler
+--dolayýsýyla her personelin maaþý ile ort maaþý kýyasla ve onu getirir veya getirmez p.* da satýr satýr çalýþcaktýr yani senkron
+--bir þekilde her personel için kontrol ederek sýrayla gidecekler örneðin ercan çelik maasý ort maasýn altýnda ise where izin vercek
+--p.* ise ercan celik in tüm sütunlarýný gösterecek sonra  sýradaki personele bakýlacak where filtresinden geçerse p.* sayesinde
+--tüm sütunlarýyla beraber o personel yazdýrýlcak böyle böyle sýrayla gidilcek yani where 'de p.* da sonuçta ikiside satýr satýr ilerliyor
+
+
+
+
+--TSQL çözümü
+-- 1. Adým: Ortalamayý tutmak için bir deðiþken tanýmla
+DECLARE @OrtalamaMaas DECIMAL(18, 2);
+
+-- 2. Adým: Ortalamayý hesapla ve bu deðiþkene ata
+SET @OrtalamaMaas = (SELECT AVG(Maas) FROM Personel);
+
+-- 3. Adým: Deðiþkeni kullanarak "subquery'siz" ana sorguyu çalýþtýr
+SELECT *
+FROM Personel
+WHERE Maas < @OrtalamaMaas;
 
 
 
