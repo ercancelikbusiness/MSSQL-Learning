@@ -444,6 +444,72 @@ where i.adi='Ankara'or i.adi='Adana'or i.adi='Bayburt'or i.adi='Malatya'
 --ve ilcesinde a geçenlerin hepsini sayýyoruz yani tüm iþlem zaten tek satýrda o il için
 --bitiyor dolayýsýyla gruplamaya gerek kalmýyor
 
+--SORU: sadece ilçesi olan illeri getiren SQL
+
+select i.* from iller i
+select ic.* from ilceler ic
+
+select i.adi   from iller i inner join ilceler ic on i.ilkodu=ic.ilkodu group by i.adi
+
+-- inner join eþleþme olmayanlarý silip atýyor idi yani il kodu 03 olan bir il  03=ic.kodu burda sonuc yok ise direkt onu görmezden gelir
+--listeden atar aslýnda olay eþleþme olmayanlarý inner joinin direkt silip atmasýyla ilgili.
+
+--subq kullanarak ancak þöyle olur
+
+select  i.adi from iller i where  i.ilkodu in ( select  ic.ilkodu from ilceler ic)
+--farkettiysen ortak sütun eþlemesi yapmadýk çünkü burda gerek yoktu.. subq illaki ortak sütün = lemesi içermez 
+--ancak burda þöyle bir handikap vardýr   subq içindeki  il kodlarý  bir il içinde birden fazla ilçe olacaðý için  birden fazla  ayný il kodu 
+--içerecektir.  yani il kodlarý 06 06 06 diye tekrar edecek fakat farkettiysen çýktýmýz sorunsuz çalýþtý yani birden fazla adana
+--vb yazmadý   burda sonucun doðru olmasý where ile alakalý where bir kez þart saðlandýysa ayný or operatörü gibi diðerlerine bakmaz
+--evet 06   mevcut koþul saðlandý der ve geçer ama böyle olmasaydý çýktýmýz mesela adananýn ilçe sayýsý kadar adanayý tekrar tekrar yazdýrýrdý
+-- iþte bunun için distinct kullanabiliriz ancak asýl kullaným exists ile olmalý
+
+select  i.adi from iller i where  i.ilkodu in ( select  distinct ic.ilkodu from ilceler ic)
+--þimdi  in içinde her il kodu 1 kez tekrarlanacak dolayýsýyla arka planda  daha az iþ yapýlmýþ olacak
+--distinct anlamý tekrarlayan ifadeleri tek bir gösterim haline getirir
+
+--aþaðýda aradaki fark anlaþýlýr
+select  distinct ic.ilkodu from ilceler ic
+select   ic.ilkodu from ilceler ic
+
+---- exists ile çözüm ----
+
+--exists ile çözmeden aþaðýdaki olayý anlayalým
+select 1  from iller i
+select 'asdjkad'  from iller i
+--farkettiysen iller tablosu seçili ama select kýsmý abzürt veriler içeriyor. ancak çýktý tablonun satýr sayýsý kadar yazdýrma yapýyor
+--kýsaca select kýsmý senin emrindeki birþey ama tabloyla uyarlý harekette edebiliyor burdan cýkan sonuc sudur eðer  from sonrasý
+--doðruysa çýktý rastgele birþey ayarlanabilir bu true demektir þimdi sql dünyasýnda böyle kullanýmlarda yani sonuc true mi bilmek için
+--genelde 1 kullanýlýr
+
+
+--alttaki kodu anlamak için altýna yaptýðým açýklama sonrasý  = lik olmayan bir örnek yazýcam  olayý daha iyi anlarsýn
+select i.adi  from iller i where exists  (select 1 from ilceler ic  where  ic.ilkodu=i.ilkodu)
+/*
+þimdi exists ile bu soru bu þekilde saðlýklý çözülür en doðru çözüm inner join sonrada exists dir
+burda yaðtýðýmýz þey þu iller tablosundaki tüm il adlarýný  where filtresinden geçerse yazdýr  dedik ama where den sonra birde
+exists de kullandýk bu þu anlama gelir exists den sonraki kod true verirse where koþuluda true olur  o halde sýralama þöyle olcak
+ana sorgu tüm illeri sýrayla yazdýracaktýr(sql sýrayla giderdi) ilk sýrada Adana var  adanayý yazdýrmadan önce where koþulu ile karþýlaþýr
+ gerisi yukarda anlattýðým þekilde ilerler yani alt sorgudaki where þöyle olur ic.ilkodu='01' adanýnýn il kodu 01 oldugu için alt sorguda
+ 01 iletilir  ic.ilkodu 01 e sahip oldugu için alt sorgu  bir çýktý verecek durumdadýr yani true'dir(4 adet 01 kodlu ilçe var 4 satýr 
+ 1 yazdýrýcak ama  bu önmli deðil. bir satýr bile yazdýrabiliyor olmasý onu true yapmýþ demektir) dolayýsýyla exits true döner
+ o halde ana sorgudaki where'de true döner son olarak ana sorgu tamam adanayý yazdýrabilirim der ve yazdýrýr sýrayla iþlemler devam eder
+ NOT: 1 yerine ic.* veya iç.ilkodu gibi farklý þeylerde yazabilirdik ama sonuç true mi false mi bu önemli old için 1 yazarýz
+ */
+
+select i.adi  from iller i where exists  (select 1 from ilceler ic  )
+-- eðer alt sorgu where içermese exists her il için true dönecektir ve iller tablosu aynen çalýþýcaktýr
+--not: ayný ilden birden fazla gelmez iller tablosu ayný gelir çünkü ana sorgu adana iþlemindeyken alt sorgu 1 kez true verse yeterlidir
+--ne demiþtik where ile  tek koþul yeterli daha doðrusu true false babýna gelen herþeyde bu böyle. dolayýsýyla alt sorgu 1 kez true verse
+--exists true döner ve ana sorgu için adana okeydir ama bu tüm iller için true olacak cunku alt sorgu koþulsuz þartsýz her çalýþýmda
+--true dönecektir çünkü hiçbir iliþki yok yani ana sorgu ne kadar satýr  olursa olsun her satýrda alt sorgu yani subq sýfýrdan calýsacaktýr
+--dolayýsýyla ana sorguda kaç satýr varsa hepsi true döncek anlamsýz birþey olcak bu yüzden alt sorguyada where ekliyerek
+--ana sorgu ile aralarýnda bir þart oluþturmalýyýz bir baðlam olmalý
+
+
+
+
+
 
 
 
