@@ -507,6 +507,26 @@ select i.adi  from iller i where exists  (select 1 from ilceler ic  )
 --ana sorgu ile aralarýnda bir þart oluþturmalýyýz bir baðlam olmalý
 
 
+--SORU sadece bünyesinde personelleri olan departmanlarý getiren sql
+
+select p.* from Personel p
+
+select d.Adi from Departmanlar d where exists (select 1 from Personel p where p.DepKodu=d.Kodu)
+
+--  ana sorgu departman adlarýný yazdýr diyor  ama where filtresi var o  ilk yazýlacak departmaný filtreye sokar Bilgi iþlem
+--alt sorguda d.Kodu istendiði için bilgi iþlemin d.Kodu D1 diyor   p.DepKodu=D1 mevcut olacaðý için alt sorgu true döner ve bilgi iþlm yazar
+
+--SORU: sadece ilçesi olmayan illeri getiren sql
+
+select  i.adi from iller i where  not exists (select 1 from ilceler ic where ic.ilkodu=i.ilkodu)
+-- þimdi burda ilcesi olmayanlarý istiyor dolayýsýyla ilcesi  olanlar true dönecektir olmayanlar false
+--ancak  not exists demek false olanlarý true kabul etmek demektir yani eðer  alt sorgu false ise not exists bunu true kabul edecek
+--dolayýsýyla where false olanlarý true gibi görecek 
+
+--SORU sadece bünyesinde personelleri olmayan departmanlarý getiren sql
+
+select d.Adi from Departmanlar d where not exists (select 1 from Personel p where p.DepKodu=d.Kodu )
+
 
 
 
