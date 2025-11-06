@@ -201,9 +201,14 @@ left join ilceler ic on ic.ilkodu=i.ilkodu
 --select Into(veri/tablo yedekleme)
 
 
+
+/*
 select * into illerYedek from iller
 
 select * into ilcelerYedek from ilceler
+*/
+
+
 
 /*
 Bu, SQL'de en sýk kullanýlan ve en faydalý "hýzlý yedekleme" komutlarýndan biridir.
@@ -255,6 +260,51 @@ DEFAULT (Varsayýlan Deðerler) veya IDENTITY (Otomatik Artýþ) gibi kurallarý taþý
 
 Yani illerYedek tablosu, iller tablosunun "kuralsýz", "sadece veri içeren" ham bir kopyasý olur.
 */
+
+
+--soru:
+--Ankara ilçelerinden isminde a geçen verileri silen sql(sub query)
+--Ankara ilçelerinden isminde a geçen verileri silen sql(sub query)
+--Ankara ilçelerinden isminde a geçen verileri silen sql(sub query)
+--Ankara ilçelerinden isminde a geçen verileri silen sql(sub query)
+
+
+-- önce çaðýralým
+
+select i.* from iller i
+select ic.* from ilceler ic
+
+select ic.* from ilceler ic where ic.ilkodu=(select i.ilkodu  from iller i where i.adi='Ankara' )
+and ic.adi like '%a%'
+
+--yukardaki önemli bir anlama aydýnlanma  yaþatmaný bir sorgu. biz bu sorguyu calýstýrýnca aslýnda alttakine dönüþüyor ama
+-- aklýmýza  þu takýlabilir: sql kodu birkez calýstýrýnca ilk satýr yazdýkdan sonra diðer satýrlarýn hepsinde subquery tekrarmý calýsýcak
+--bu sorunun altýnda þu yatýyor sql her sorguyu her satýrda tekrar bakýp calýstýrýyor mu bu kurulan  subq sorgusuna göre deðiþir
+--burdaki örnekte sadece birkez calýsýr çünkü 06 döner ve where ic.ilkodu=06 demek gibi calýsýr ama bazý sql sorgularý satýr baðýmlýdýr
+--bunlar satýr satýr iþlenirken satýra özgü sonuc üretecektir
+
+select ic.* from ilceler ic where ic.ilkodu='06'
+and ic.adi like '%a%'
+
+-- NOT: DELETE UPDATE gibi kullanýmlarda kýsaltma kullanýlmasýna çok gerek yok hatta derleyici  bulmaz zaten
+
+
+--delete from ilceler  where  ilceler.ilkodu=(select i.ilkodu from iller i where i.adi='Ankara') and ilceler.adi like '%a%'
+--not: ilceler.ilkodu dememize bile gerek yoktur direkt  where ilkodu=(subq) þeklinde yaparýz
+
+
+
+
+-- SORU: plaka kodu  05 den büyük olan ve hiçbir ilçesi olmayan illeri silen sql(in/exists ile yaz)
+-- SORU: plaka kodu  05 den büyük olan ve hiçbir ilçesi olmayan illeri silen sql(in/exists ile yaz)
+-- SORU: plaka kodu  05 den büyük olan ve hiçbir ilçesi olmayan illeri silen sql(in/exists ile yaz)
+-- SORU: plaka kodu  05 den büyük olan ve hiçbir ilçesi olmayan illeri silen sql(in/exists ile yaz)
+
+select i.adi from iller i where i.ilkodu >'05' and  i.ilkodu=(select i.ilkodu from ilceler ic where  ic.ilkodu=i.ilkodu)
+
+ 
+
+
 
 
 
