@@ -300,7 +300,34 @@ and ic.adi like '%a%'
 -- SORU: plaka kodu  05 den büyük olan ve hiçbir ilçesi olmayan illeri silen sql(in/exists ile yaz)
 -- SORU: plaka kodu  05 den büyük olan ve hiçbir ilçesi olmayan illeri silen sql(in/exists ile yaz)
 
-select i.adi from iller i where i.ilkodu >'05' and  i.ilkodu=(select i.ilkodu from ilceler ic where  ic.ilkodu=i.ilkodu)
+select i.* from iller i where i.ilkodu >'05' and  i.ilkodu = (select i.ilkodu from ilceler ic where  ic.ilkodu=i.ilkodu) -- hata verir
+--yukardaki hem cevap deðil çünkü   05 þartý okey ama   ilçesi olanlarý gösteriyor hemde kritik bir hata daha  var "="   kullanýrsak hata verecek
+--çünkü örneðin 06  için subquey ic.ilkodu=06 olcak ve burda ilceler tablosunda 6 adet ilkodu 06 olan ilce var  dolayýsýyla burda sisteme
+--sadece 1 il kodu bana dönder filtreside eklemeliyiz bunun birden fazla yolu var aþaðýya yazacaðým ardýndan sorunun asýl  cevabýna bakcaz
+select i.* from iller i where i.ilkodu >'05' and  i.ilkodu in (select i.ilkodu from ilceler ic where  ic.ilkodu=i.ilkodu) 
+--yukardaki doðru cevaplardan biridir çünkü in  denen þey þartý 1 kez saðlýyorsa where filtresinden geçti anlamýna gelir ve
+--06 yý kabul eder sonra sýradaki farklý il koduna geçer
+select i.* from iller i where i.ilkodu >'05' and  i.ilkodu = (select distinct i.ilkodu from ilceler ic where  ic.ilkodu=i.ilkodu) 
+--eðer illa = kullancaksan o halde distinct kullan bu sayede tekrarlýlarý 1 e çökerteriz
+select i.* from iller i where i.ilkodu >'05' and   exists (select 1 from ilceler ic where  ic.ilkodu=i.ilkodu) 
+--eðer exists kullanmak istersekde böyle yapardýk yani var mý ? diye soruyoruz var mý olan ise select 1 li kýsýmdýr 1 sembolik idi
+--en az 1 çýktý verebilecek yani null vermiyecekse var demektir 1 in önemi yok direkt var olarak deðerlendirilir ve where filtresini geçer
+
+--yukardakiler aslýnda öðretici oldu ama sorunun asýl cevabý bunlar deðil asýl cevabý öðrenmek için yumuþak geçiþ yaptýk
+
+select i.* from iller i where i.ilkodu>'05' and not exists (select 1 from ilceler ic where ic.ilkodu=i.ilkodu)
+-- bu sorunun asýl cevabýdýr.. exists kýsmýna kadarýný anlýyoruz sonrasý þunu diyor:  not exists "yok ise"  demektir yani where içinde 
+--kullandýgýmýzda; "yok ise filtreyi saðlar" demektir.  yani atýyorum 07 nin  ilceler tablosunda ilkodu yoksa ilçesi yok demektir dolayýsýyla
+--subquery içinde 05 den sonraki her il kodu sýrayla ilerlerken subq içindeki ic.ilkodu 06 07  diye gidecek eðer örneðin sýra 07 deyken
+--ic.ilkodu =07 herhangi bir sonuc üretmezse not exists koþulu saðlanacaktýr çünkü yok ise þartý saðlanmýþtýr
+
+
+
+
+select i.* from iller i where i.ilkodu >'05' and  i.ilkodu not in(select i.ilkodu from ilceler ic where  ic.ilkodu=i.ilkodu)
+
+select ic.* from ilceler ic
+select i.* from iller i
 
  
 
