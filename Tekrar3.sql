@@ -300,14 +300,15 @@ and ic.adi like '%a%'
 -- SORU: plaka kodu  05 den büyük olan ve hiçbir ilçesi olmayan illeri silen sql(in/exists ile yaz)
 -- SORU: plaka kodu  05 den büyük olan ve hiçbir ilçesi olmayan illeri silen sql(in/exists ile yaz)
 
-select i.* from iller i where i.ilkodu >'05' and  i.ilkodu = (select i.ilkodu from ilceler ic where  ic.ilkodu=i.ilkodu) -- hata verir
+select i.* from iller i where i.ilkodu >'05' and  i.ilkodu = (select ic.ilkodu from ilceler ic where  ic.ilkodu=i.ilkodu) -- hata verir
 --yukardaki hem cevap deðil çünkü   05 þartý okey ama   ilçesi olanlarý gösteriyor hemde kritik bir hata daha  var "="   kullanýrsak hata verecek
---çünkü örneðin 06  için subquey ic.ilkodu=06 olcak ve burda ilceler tablosunda 6 adet ilkodu 06 olan ilce var  dolayýsýyla burda sisteme
+--çünkü örneðin 06  için subquey ic.ilkodu=06 olcak ve burda ilceler tablosunda 6 adet ilkodu 06 olan ilce var  dolayýsýyla  tekrarlý çýktýlar oluþur
+--burda sisteme
 --sadece 1 il kodu bana dönder filtreside eklemeliyiz bunun birden fazla yolu var aþaðýya yazacaðým ardýndan sorunun asýl  cevabýna bakcaz
-select i.* from iller i where i.ilkodu >'05' and  i.ilkodu in (select i.ilkodu from ilceler ic where  ic.ilkodu=i.ilkodu) 
---yukardaki doðru cevaplardan biridir çünkü in  denen þey þartý 1 kez saðlýyorsa where filtresinden geçti anlamýna gelir ve
---06 yý kabul eder sonra sýradaki farklý il koduna geçer
-select i.* from iller i where i.ilkodu >'05' and  i.ilkodu = (select distinct i.ilkodu from ilceler ic where  ic.ilkodu=i.ilkodu) 
+select i.* from iller i where i.ilkodu >'05' and  i.ilkodu in (select ic.ilkodu from ilceler ic where  ic.ilkodu=i.ilkodu) 
+--yukardaki doðru cevaplardan biridir çünkü in  denen þey þartý "1 kez" saðlýyorsa where filtresinden geçti anlamýna gelir ve
+--06 yý kabul eder sonra sýradaki farklý il koduna geçer ancak  in' de kullansak yinede distinct kullansak daha iyi olur
+select i.* from iller i where i.ilkodu >'05' and  i.ilkodu = (select distinct ic.ilkodu from ilceler ic where  ic.ilkodu=i.ilkodu) 
 --eðer illa = kullancaksan o halde distinct kullan bu sayede tekrarlýlarý 1 e çökerteriz
 select i.* from iller i where i.ilkodu >'05' and   exists (select 1 from ilceler ic where  ic.ilkodu=i.ilkodu) 
 --eðer exists kullanmak istersekde böyle yapardýk yani var mý ? diye soruyoruz var mý olan ise select 1 li kýsýmdýr 1 sembolik idi
@@ -324,7 +325,17 @@ select i.* from iller i where i.ilkodu>'05' and not exists (select 1 from ilcele
 
 
 
-select i.* from iller i where i.ilkodu >'05' and  i.ilkodu not in(select i.ilkodu from ilceler ic where  ic.ilkodu=i.ilkodu)
+select i.* from iller i where i.ilkodu >'05' and  i.ilkodu not in(select distinct ic.ilkodu from ilceler ic )
+--yukarýdakide not in ile yapýlan doðru cevaptýr yalnýz ************ önemli !!!! ********** burda where kýsmýný yazmadýk
+--çünkü mantýken not in diyorki içindekiler olmamalý diyor yani subq içindekiler olmamalý diyor
+--peki subq ne diyor ilceler tablosundaki tüm il kodlarýný  yazýyor distinct  sayesinde her il kodu 1 kez yazýlcak
+--yani ilceler tablosunda bir il kodu varsa zaten o bizim geçerli ilkodumuz olamaz çünkü ilçesi var demektir !
+-- o yüzden burda where kullanmaya gerek kalmadý boþu boþuna row by row yani satýr satýr çalýþtýrmaya gerek yok satýr baðýmlýlýðý
+--ek yük getirir yani bu ve not exists doðru cevaptýr.  
+
+-- nihai cevap: select i.* kýsmýný delete ile deðiþtirirsek nihai cevaba ulaþýrýz ************************
+-- nihai cevap: select i.* kýsmýný delete ile deðiþtirirsek nihai cevaba ulaþýrýz ************************
+
 
 select ic.* from ilceler ic
 select i.* from iller i
