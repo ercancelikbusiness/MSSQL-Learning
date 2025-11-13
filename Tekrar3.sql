@@ -341,7 +341,82 @@ select ic.* from ilceler ic
 select i.* from iller i
 
  
+ --TRUNCATE TABLE  tabloyu çok hýzlý silmek ve identity id leri sýfýrlar Deletede herþey tek tek yapýlýr ve id kaldýðý yerden devam ederdi
+ --TRUNCATE TABLE  tabloyu çok hýzlý silmek ve identity id leri sýfýrlar Deletede herþey tek tek yapýlýr ve id kaldýðý yerden devam ederdi
+ --TRUNCATE TABLE  tabloyu çok hýzlý silmek ve identity id leri sýfýrlar Deletede herþey tek tek yapýlýr ve id kaldýðý yerden devam ederdi
 
+
+ -- aþaðýda identity otomatik olan bir tabloda id yi bir süreliðine manuel vermeyi ardýndan bunu orjinal(off) hale getirmeyi görcez
+ -- aþaðýda identity otomatik olan bir tabloda id yi bir süreliðine manuel vermeyi ardýndan bunu orjinal(off) hale getirmeyi görcez
+ -- aþaðýda identity otomatik olan bir tabloda id yi bir süreliðine manuel vermeyi ardýndan bunu orjinal(off) hale getirmeyi görcez
+
+ set identity_insert ilceler on
+go
+
+--insert into ilceler(Id,ilkodu,adi)
+--values (112,09,iskandinavya)
+
+set identity_insert ilceler off
+go
+
+
+--bütün personelleri/iþçileri getiren sql(bikestoretekrar)
+
+select * from  BikeStoresTekrar.sales.staffs  -- eðer sol yukardaki veritabaný seçiçi BikeStoresTekrar'da olsaydý Sadece sales.staffs yapardýk
+
+--S2: bütün maðaza listesini veren sql
+
+select * from  sales.stores
+
+--s3: personel/iþçi bilgilerini maðaza isimleri ile birlikte getiren sql
+
+select st.* , sto.store_name from sales.staffs st left join sales.stores sto on st.store_id=sto.store_id
+
+--3. soruyu subquery ile yapalým
+
+select staff.* , (select store.store_name  from sales.stores store where  store.store_id=staff.store_id) from sales.staffs staff
+
+
+--s4:personel bilgilerini maðaza ismi ve yönetici isimleri ile birlikte getiren sql
+
+-- ilk baþta subquery ile yapacaðýz sonra subquerysiz yapacaðýz bu 2 cevap cok önemli***************
+
+select  
+staffs.*,
+stores.store_name,
+(select (s.first_name+' '+ s.last_name)  from sales.staffs s where s.staff_id=staffs.manager_id ) as Manager 
+from sales.staffs staffs 
+left join sales.stores stores on staffs.store_id=stores.store_id
+
+--yukardaki kilit nokta subq içinde ki where kýsmýndaki s ve sfaffs kýsaltmalarýdýr 
+--yani diyorkizki staffs.* sayesinde tüm personeller satýr satýr gelecekya. ilk satýrdan itibaren her satýrdaki personel kendi manager
+--id sine zaten sahip(yani personeller birbirinin patronu) dolayýsýyla  atýyorum staffid si 4 olan virgie nin manager id si 2 dir 
+--biz subq içinde þunu dedik  satýr virgiye geldiðinde  s.staff_id = 2 olacak  staff idsi 2 olan mireyadýr. dolayýsýyla
+--subq içindeki firstname ve lastname bu id ye sahip kiþiyi getirecektir yani mireya copeland
+
+--þimdi aþaðýda subq suz yapalým ********** çok önemli bir mantýk öðreneceðiz detaylý öðren **************
+
+select sta.*, 
+sto.store_name,
+(m.first_name+' '+m.last_name) as Manager
+from sales.staffs sta left join sales.stores sto on sta.store_id=sto.store_id
+left join sales.staffs m on m.staff_id=sta.manager_id   -- *** önemli: burda sta.staff_id=m.manager_id yapsaydýn olmazdý;
+
+--çünkü en son eklediðimiz tablo  m'li olandýr dolayýsýyla o tablodan bir isim  soy isim yazdýrýlacak.
+--eðer  sta.staff_id=m.manager_id yaparsak  3. sütuna gelindiðinde  ana sorgu sta üzerinden kurulduðu için deðer sta'lý olan deðer alacak
+-- o halde genna için  3=m.manager_id olacak  burda 2 adet saçmalýk olur birincisi gennanýn manger id si 2 dir 3  olmasý ordan yanlýþdýr
+--2.si  3=m.manager_id dediðimizde manager id si 3 olanlarý bul demektir yani birden fazla sonuç dönecektir buda hatalýdýr
+-- ancak  m.staff_id=sta.manager_id  dersek eðer.. (ana tablo sta olduðu için  son eklenen left joinde sta üzerinden deðer alacaktýr)
+-- yani = lik baðlamasý sta dan deðer alacak  kýsaca m.staff_id=2 ( genna için) olacaktýr yani satýr gennaya geldiðinde
+--2. left joinimiz(m)  m.staff_id=2 olan kiþiyi tutacak buda mireyadýr  o halde 3. sütunda m.first_name diyince mireyanýn ismi gelecektir
+-- ÖZETLE: left join yaparken baðlama kýsmý gelindiðinde  kafan karýþýyorsa þöyle düþün: left join deme soldakine baðlan demektir
+--biz 2. left joinde  staff tablosuna baðlanmayý seçtik yani sola baðlandýðýmýz tablo staffdýr o halde baðlantý deðeri staffdan gelecektir
+--yani bir eþitlik yapacaksan staffdaki deðerin geleceðini bilirsen kafan karýþmaz çünkü amacýmýz her satýrdaki gelen ismin manager id'
+--sini almaktýr o halde sta.manager_id ile ana sorgunun manager id sini  alalým son tablomuzdaki kiþi ismi o id olsun
+-- bu noktada subqueryli olan anlaþýlmasý daha kolay  ama left join  yaparak = liklerdeki ana kuralýda öðrenmiþ olduk
+--mesela ilk subqli örneðimizdede subq içindeki = likde deðerimiz staffs'dan gelmiþtir ve s.staff_id  o deðeri almýþtýr
+--özetle ana sorgu veya baðlanýlan tablo neyse oradan deðer  gelecektir.
+  
 
 
 
