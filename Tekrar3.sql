@@ -415,7 +415,9 @@ left join sales.staffs m on m.staff_id=sta.manager_id   -- *** önemli: burda sta
 --sini almaktýr o halde sta.manager_id ile ana sorgunun manager id sini  alalým son tablomuzdaki kiþi ismi o id olsun
 -- bu noktada subqueryli olan anlaþýlmasý daha kolay  ama left join  yaparak = liklerdeki ana kuralýda öðrenmiþ olduk
 --mesela ilk subqli örneðimizdede subq içindeki = likde deðerimiz staffs'dan gelmiþtir ve s.staff_id  o deðeri almýþtýr
---özetle ana sorgu veya baðlanýlan tablo neyse oradan deðer  gelecektir.
+--özetle ana sorgu veya baðlanýlan tablo neyse oradan deðer  gelecektir. yada þöyle düþün  son yazdýðýn joini demekki isim soy isim
+--için kullanacaksýn o halde ismini yazdýracaðýn  kiþileri nasýl seçeceksin  id lerini kullanarak yani son yazdýðýn joinin kýslatmasý
+--o kiþilerin  idlerini tutucak birþey olmalý  böyle mantýk yürüt
   
 
 
