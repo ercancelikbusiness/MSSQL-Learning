@@ -84,7 +84,7 @@ update iller set BolgeNo=case when adi in ('Adana','Antalya') then 3
 END;
 -- burda  BolgeNo kýsmýný düzenlicez dedik ve içinde adi þu olanlarý 3 veya ilkodu þu olanlarýn BolgeNo sunu 6 yap gibi uyguladýk
 --esnek dememizin nedeni farkettiysen adi veya ilkodu kullanabildik ve in operatörü mevcut idi ama illaki in olmasýna gerek yok
---+ - = falanda olabilirdi
+--+ - = falanda olabilirdi altta farkký case when kullanýmlarý mevcuttur esnek ve basit halleri  kullanýma göre deðiþiyor
 */
 
 
@@ -102,4 +102,58 @@ end as ZamliMaas
 from  Personel p
 
 
+--soru: personellerin cinsiyet ve  departmanlarýna gore zamlý maas hesabýný yapan ve ekrana listeleyen sql
 
+-- bilgi iþlem E:%40 K:%30 // D1 miþ   select * from Departmanlar
+--insan kaynaklarý E%20 K%25 d3
+--diðer %15
+
+select
+p.*,
+case when p.DepKodu = 'D1' and p.Cinsiyet='K' then 30
+     when p.DepKodu = 'D1' and p.Cinsiyet='E' then 40
+     when p.DepKodu = 'D3' and p.Cinsiyet='K' then 25
+     when p.DepKodu = 'D3' and p.Cinsiyet='E' then 20
+     else 15
+     end as ZamOraný,
+case when p.DepKodu = 'D1' and p.Cinsiyet='K' then p.Maas+p.Maas*30/100
+     when p.DepKodu = 'D1' and p.Cinsiyet='E' then p.Maas+p.Maas*40/100
+     when p.DepKodu = 'D3' and p.Cinsiyet='K' then p.Maas+p.Maas*25/100
+     when p.DepKodu = 'D3' and p.Cinsiyet='E' then p.Maas+p.Maas*20/100
+     else p.Maas+p.Maas*15/100
+     end as ZamlýMaas
+from personel p
+--not: illeri bölgelere yerleþtirirken case whenden önce BolgeNo demiþtik yukardan onun farkýna bak ve in kullandýk
+--yani orda bir deðiþken içine atama yaptýk burda sadece gösterim þeklinde kullandýk
+
+---------------------******************** view konusu ******************----------------
+---------------------******************** view konusu ******************----------------
+---------------------******************** view konusu ******************----------------
+--view(görünüm) 1 veya 1 den fazla tabloda sadece select komutu kullanýlarak elde edilen veri çýktýlarýdýr
+-- çok sýk baþvurulan sql sorgu sonuclarýný bir gorunumde saklamak için kullanýlýr veri giriþ  çýkýþ 
+--ve güncellemenin sýk oldugu tablolarda tercih edilmez
+-- view nesnelerine eriþim/kullaným týpký tablolar gibidir
+--soru: tüm bölgeleri illeri ve ilçe bilgileri ile birlikte getiren sql
+
+
+
+
+select b.* from Bolgeler b
+select i.* from iller i
+select ic.* from ilceler ic
+
+create view vTurkiye
+as
+select 
+b.BolgeNo,
+i.adi,
+i.ilkodu,
+ic.adi as ilceadi,  -- ilceler ve iller tablosunda ayný olan sütun isimlerine mecburen takma ad vermeliyiz yoksa hata verirdi
+ic.ilkodu as ilcekodu
+from Bolgeler b
+left join
+iller i on i.BolgeNo=b.BolgeNo  -- tablonun satýr satýr akacaðýný düþün ve  önce ana tablo "b ye deðer gelecek" i ona göre þekil alacak i.BolgeNo=1 gibi.
+left join
+ilceler ic on ic.ilkodu=i.ilkodu
+
+select v.* from vTurkiye v
