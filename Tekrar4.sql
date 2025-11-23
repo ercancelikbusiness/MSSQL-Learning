@@ -156,4 +156,61 @@ iller i on i.BolgeNo=b.BolgeNo  -- tablonun satýr satýr akacaðýný düþün ve  önce
 left join
 ilceler ic on ic.ilkodu=i.ilkodu
 
-select v.* from vTurkiye v
+select v.* from vTurkiye v -- artýk yukardaki kodlar  vTurkiye içinde hazýr var bu tabloyu burdaki   1 satýrlýk select ile gösterebiliriz.
+
+
+--Önemli not :  örneðin left joinlerdeki on iþlemi sýrasýndaki  baðlantý kurulacak sütunlarýn türleri farklý olsaydý þunu yapardýk
+-- Ilceler ic on ic.ilkodu = CAST(i.ilkodu AS INT)  yani illerdeki ilkodunu ilcelerdeki ile ayný (int) olmasýný  saðlardýk 
+
+select *,LEN(BolgeAdi) as karakterSayisi from Bolgeler -- 2. sütun yani karakterSayisi sütunu, o satýrdaki karakter sayýsýný yazar
+
+--**************genel sorular***************---------
+--**************genel sorular***************---------
+--**************genel sorular***************---------
+--not: ama bu sefer satýr satýr ne yaptýðýmýzý tam anlayarak yapýyoruz ezbere yaptýklarýmýzýn nedenlerini anlýyoruz
+--yanlara yazdýðým notlarý cevabýn altýnda genel olarak toplayarak anlatacaðým
+--yanlara yazdýðým notlarý cevabýn altýnda genel olarak toplayarak anlatacaðým
+--yanlara yazdýðým notlarý cevabýn altýnda genel olarak toplayarak anlatacaðým
+
+
+--s4: Personel Bilgilerini Maðaza Ýsmi ve Yönetici Ýsimleri ile Birlikte Getiren SQL
+
+select sta.* from sales.staffs sta
+select sto.* from sales.stores sto
+
+select 
+sta.*,
+sto.store_name, -- ilk left joindeki on sto.store_id=sta.store_id burda sto içinde o anki satýrýn sta'dan gelen store id si mevcut dolayýsýyla bu satýrdaki store name store_id ye göre gelcek
+mg.first_name+' ' +mg.last_name as Manager
+from sales.staffs sta
+left join
+sales.stores sto on sto.store_id=sta.store_id --  > her satýrda sta'dan gelen storeid yi kullanýcaz yani deðer sta.store_id ye gelcek
+left join
+sales.staffs mg on mg.staff_id=sta.manager_id
+
+/*
+yani kýsaca özetleyeceksek her left join baðlantýsý aslýnda satýr satýr ilerlediðimizi düþünerek yazarsan daha  kolay hatýrlýyorsun
+mesela ilk left joinde sto lu olaný sola yazdýk çünkü sta'lý olandan deðer gelecek peki neden sta'lý olandan deðer geliyor çünkü
+ana tablomuz sta lý olan left joinde baðlanan   her zaman 2. plandadýr  neye left joinle baðlanýyorsa o aslýnda ana tablo gibi düþün
+yani "sto...= (bir deðer gelcek)" þeklinde bir yapý oluþturursan daha güzel bir kod düzeni olur  2. left joinimiz aslýnda
+konuyu tamamýyla öðreten kýsýmdýr. burda amacýmýz þu idi; ana tabloda zaten manager_id ler belirtilmiþ yani manager_id aslýnda staff_id
+yi temsil ediyor dolayýsýyla bize deðerin geldiði kýsýmdan manager_id gelmeli bizde onu staff_id içine atalým ki daha sonrasýnda
+name'yi kullanýrken staff_id baz alýnarak deðer döndürebilelim çünkü  ana tablonun benzersiz kimlik staff_id üzerine saklý
+kýsaca hedefimiz birþey.staff_id = birþey.manager_id formatýnda olmalýdýr. ancak  birþey kýsmý ne olmalý? iþte bunada karar verirken
+þöyle düþünmeliyiz deðer saðdakine gelecek peki saðdaki nedir her satýrda ana tablodan bir deðer geliyor yani soldaki tablo yani
+sta'lý olan.. o halde soldakide en son eklenen join olmalý yani mg olmalý zaten select kýsmýndaki son sütunda isim soy isim içeren
+kýsaltmayý kullanýcaksak bu staff_id leri taþýmalý ünkü staff_id üzerinden isim soy isim döndüreceðiz !
+not: manager ad soyadý 2. sütuna ayarlasaydýk 2 sales.staffs' ý birbirine baðlardýk bu sorun olmazdý çünkü kýsaltmalarý farklý olurdu
+*/
+
+--subq ile yapýlmýþ hali
+--subq ile yapýlmýþ hali
+
+
+select sta.*,
+(select sto.store_name  from sales.stores sto where sto.store_id=sta.store_id ) as StoreName,
+(select mg.first_name+' '+mg.last_name from sales.staffs mg where mg.staff_id=sta.manager_id) as Manager --left joindeki ayný mantýk
+from sales.staffs sta
+
+
+
