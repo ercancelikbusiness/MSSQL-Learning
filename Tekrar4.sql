@@ -212,5 +212,40 @@ select sta.*,
 (select mg.first_name+' '+mg.last_name from sales.staffs mg where mg.staff_id=sta.manager_id) as Manager --left joindeki ayný mantýk
 from sales.staffs sta
 
+----------------------------------------------------------------------------------------------------------------------------------
+
+
+
+if Exists(Select * from sys.objects Where name=N'Deneme' AND Type = 'U')
+Begin
+	DROP Table Deneme
+	Print 'Tablo VARDI SÝLÝNDÝ'
+END
+ELSE
+Print 'TABLO MEVCUT DEÐÝL'
+
+Create Table  Deneme(
+ id int,
+ Ad Varchar(20)
+)
+
+-- N =  nvarchar anlamýna gelir U ise deneme nin bir  user table oldugunu belirtir
+-- yani bir view deðil table olduðunu ifade eder gibi düþün kýsaca deneme tablosu varmý yok mu bakýyor varsa siliyor yeniden olþtryr
+
+if NOT Exists(Select * from sys.objects Where name=N'Deneme' AND Type = 'U')
+
+Create Table  Deneme(
+ id int,
+ Ad Varchar(20)
+)
+
+ELSE
+
+Print 'TABLO ZATEN VAR'
+
+-- ilk yaptýðýmýzda tablo varsa siliyor yoksa tablo zaten yok diyip tabloyu oluþturuyor yani her halukarda tablo oluþutor
+--ikincide ise tablo varsa hiçbirþey yapmýyor yok ise oluþturuyor
+
+
 
 
