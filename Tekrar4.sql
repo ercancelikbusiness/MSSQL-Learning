@@ -246,6 +246,44 @@ Print 'TABLO ZATEN VAR'
 -- ilk yaptýðýmýzda tablo varsa siliyor yoksa tablo zaten yok diyip tabloyu oluþturuyor yani her halukarda tablo oluþutor
 --ikincide ise tablo varsa hiçbirþey yapmýyor yok ise oluþturuyor
 
+--------------------------------------------------------------------------------------------------------------------------
+
+if Not Exists (Select * from tempdb.sys.tables Where Name LIKE '#TempTable%')
+Begin
+	Print 'Tablo YOK ilk Defa Create Edildi'
+	Create Table   #tempTable(
+		id int identity,
+		ilkodu varchar(3) Primary Key,
+		Adi Varchar(30) Unique
+	)
+
+END
+ELSE
+Begin
+	Print 'TABLO VAR '
+	--Delete From #tempTable
+	--Print 'Veriler Silindi'
+
+	insert into #tempTable(ilkodu, Adi)
+	Select ilkodu, Adi From iller i Where NOT Exists(Select * from #tempTable t Where t.ilkodu = i.ilkodu)  -- olmayanlara ekleme yapýlýyor
+
+	Print 'OLMAYAN Veriler Ýller Tablosundan Getirildi ve Eklendi'
+END
+
+/*
+Name LIKE '#TempTable%': Geçici tablolarýn adlarý, oturum kimliði gibi ek bilgilerle biter 
+(örneðin: #TempTable_________00000000000C). Bu nedenle, tam ad yerine LIKE ile baþlayan adlar aranýr.
+eðer tablo yoksa begin  bloðu çalýþýr varsa tabloya ekleme yapýlýr ekleme ise iller tablosundan yapýlýr ancak ekleme yapýlanlar
+subq sayesinde içi boþ veya olmayanlara yapýlýyor
+
+ÖNEMLÝ NOT: insert into'dan sonra values anahtarý kullanýlmadý ancak select burda tablo getirmekle kalmayýp eklemede yapýyor
+çünkü bu kalýba insert into select kalýbý denir
+*/
+
+Select * from #tempTable
+print 'Veriler Temp Tablodan Getirildi ve Listelendi'
+
+--****************************
 
 
 
