@@ -169,3 +169,97 @@ Select staff_id,
 
 from salaries
 
+
+
+--********************************* CROSS APPLY *************************************
+-- Ürün Kategorilerine Göre En yüksek Deðere Sahip ilk 2 ürünü (Her Bir Kategori Ýçin) Getiren SQL?
+
+CREATE SYNONYM categories FOR production.categories
+
+select * from categories
+select * from production.products
+
+select c.category_id, c.category_name, r.product_name ,r.list_price
+from  categories c 
+cross apply
+(select top 2 * from production.products p where p.category_id = c.category_id order by p.list_price desc) r
+order by c.category_id , r.list_price desc
+
+
+-- alt sorguda desc denme nedeni fiyatlar  en yüksekden düþüðe sýralanýr bu sayede her kategorideki ürünlerin en yüksek 2 sini alýr
+--ana sorgudaki   ORDER BY c.category_id, r.list_price DESC burda category desc denmemiþ boþ býrakýlmýþ yani artan sýralý grup olacak
+--list price ise desc denmiþ yani herbir grupta önce yüksek olan yazýlacak mesela category 1 de 3 ürin varsa bu 3 ürün yüksekden aþaðý
+--sýralanacak demektir. alt sorgudaan sonraki r ifadesi inner join Bolgeler b diyorduk onun gibi düþün yani crossdan sonraki alt sorgu
+--nun sonucuna verilen takma addýr. alt sorguda þu yapýlýyor ana sorgudan gelen category'e ait tüm ürünler her satýrda listelenir
+--örneðin 1 kategorisine ait 20 ürün o satýr için listelenecek ve en yüksek fiyatlý 2 ürün  yazdýrýlýcak bu her kategori için her satýrda
+--olacak  kýsaca bunu bir döngü gibi düþünme her kategori için tüm ürünler tek seferde listelenip top 2 sayesinde ilk 2 si alýnýyor
+--sql mantýðý bu þekildeydi unutma
+
+
+
+--************** DONGULER ***********************
+
+--DONGULER
+--1 den N'e kadar olan sayýlarýn Toplmaný Bulan  Program
+
+
+declare @top int =0, @i int =1 , @n int =10
+while(@i <= @n)
+begin
+
+print @i
+set @top= @i+@top
+set @i=@i+1
+end
+print @top
+
+
+
+-- verilen sayýlarý toplayan fonksiyon yapalým
+
+
+
+-- Eðer fonksiyon zaten varsa siler
+IF OBJECT_ID('dbo.fnSayilariTopla') IS NOT NULL
+    DROP FUNCTION dbo.fnSayilariTopla;
+GO
+
+-- Yeni Fonksiyonu Oluþturma
+CREATE FUNCTION dbo.fnSayilariTopla (
+    @BaslangicDegeri INT, -- Baþlangýç (i) deðeri
+    @BitisDegeri INT      -- Bitiþ (n) deðeri
+)
+RETURNS INT
+AS
+BEGIN
+    -- Toplamý tutacak deðiþken
+    DECLARE @toplam INT = 0;
+    
+    -- Baþlangýç deðerini geçici bir sayaçta tutalým (orijinal parametreyi deðiþtirmemek için)
+    -- geçiçi sayaçda tutmasakda olur ama bu daha doðru bir yaklaþým
+    DECLARE @i INT = @BaslangicDegeri;
+
+    -- Döngü: Baþlangýç deðeri bitiþ deðerine eþit veya küçük olduðu sürece devam et
+    WHILE (@i <= @BitisDegeri)
+    BEGIN
+        -- Mevcut sayýyý toplama ekle
+        SET @toplam = @toplam + @i;
+
+        -- Sayacý bir artýr
+        SET @i = @i + 1;
+    END
+
+    -- Hesaplanan toplamý döndür
+    RETURN @toplam;
+END
+GO  -- zorunlu deðil
+
+-- 1. Örnek: 1'den 10'a kadar olan sayýlarý topla (Sonuç: 55)
+SELECT dbo.fnSayilariTopla(1, 10) AS Toplam1;
+
+-- 2. Örnek: 5'ten 8'e kadar olan sayýlarý topla (5 + 6 + 7 + 8 = 26)
+SELECT dbo.fnSayilariTopla(5, 8) AS Toplam2;
+
+-- 3. Örnek: Sadece tek bir sayýyý topla (Baþlangýç ve bitiþ ayný)
+SELECT dbo.fnSayilariTopla(100, 100) AS Toplam3;
+
