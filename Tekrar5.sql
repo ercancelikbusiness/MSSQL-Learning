@@ -263,3 +263,98 @@ SELECT dbo.fnSayilariTopla(5, 8) AS Toplam2;
 -- 3. Örnek: Sadece tek bir sayýyý topla (Baþlangýç ve bitiþ ayný)
 SELECT dbo.fnSayilariTopla(100, 100) AS Toplam3;
 
+--******************************* fonksyion kurallar ******************************
+
+
+--USER DEFINED FUNCTIONS (KULLANICI TARAFINDAN OLUÞTURULA FONKSÝYONLAR)
+
+--Geriye Tek Döndüren Fonksiyonlar (SCALAR Valued Fonksiyon) (FN)
+--Geriye Tek Bir Select ile Tablo Döndüren Fonksiyonlar (INLINE Fonksiyon) (view lerin yerine Tercih edilmelidir)(IF)
+--Geriye Çoklu Sorgu ile Tablo Döndüren Fonksiyonlar (Multiple-TABLE VALUED Fonksiyon) (TF)
+
+--Fonksiyonlar içerisinde:
+	--PRINT, CURSOR KUllanýlamaz
+	--Create,DROP, ALTER, INSERT, UPDATE, DELETE KULLANILMAZ
+
+Drop Function if Exists fnDeneme
+Go
+
+Create Function fnDeneme()
+Returns int
+AS
+Begin
+	--Delete from personel where Id = 1 -- KULLANILAMAZ
+	--Insert into iller Values('67', 'Zonguldak') -- KULLANILAMAZ
+	--Update iller Set Adi = 'Yozgattt' Where Kodu = '66' -- KULLANILAMAZ
+
+	---Create Table Deneme(Id int identity) -- KULLANILAMAZ
+	-- Create view v_deneme as Select * from iller -- KULLANILAMAZ
+	-- Alter Table Departmanlar Add PerSayisi int Not Null Default 0 -- KULLANILAMAZ
+	-- DROP view if Exists v_Deneme -- KULLANILAMAZ
+
+	return 0
+End
+
+
+
+
+--************************** inline  function *************************
+
+--IN LINE Table Valued Function
+
+if exists(select * from sys.objects where name= 'fnilceler' and Type='FN')
+drop function fnilceler
+go
+
+create function fnilceler(@ilkodu varchar)
+returns table
+as
+
+return
+select ic.Id , ic.ilkodu,
+(select i.adi from iller i where i.ilkodu= ic.ilkodu) as iladi,
+ic.adi as ilceadi
+from ilceler ic where ic.ilkodu= isnull(@ilkodu, ic.ilkodu)
+
+
+
+
+
+
+
+
+
+
+
+
+if Exists(Select * from sys.objects Where name = 'fnilceler' and Type = 'IF')
+Drop Function fnilceler
+Go
+
+Create Function fnilceler(@ilkodu varchar(3))
+Returns Table
+AS
+
+RETURN
+Select ic.Id, 
+	   ic.ilkodu, 
+	   (Select i.Adi From iller i Where i.ilkodu = ic.ilkodu) as ilAdi,  -- burdada   Where i.ilkodu=ISNULL(@ilkodu, ic.ilkodu) yapýlabilir ama gereksiz zaten ana sorguda var
+	   ic.Adi as IlceAdi 
+from ilceler ic WHERE ic.ilkodu = ISNULL(@ilkodu, ic.ilkodu) -- eðer fonksiyona  null gelirse ic.ilkodu=ic.ilkodu olur buda tüm ilkodlarýný
+                                                             -- doðru kabul edecektir tüm tablo gelir
+
+
+-- FONKSÝYONU çaðýrýrken select dbo.fnilceler ... þeklinde yapamýyoruz çünkü bu tablo deðerli bir fonksiyon
+-- FONKSÝYONU çaðýrýrken select dbo.fnilceler ... þeklinde yapamýyoruz çünkü bu tablo deðerli bir fonksiyon
+
+SELECT T.* FROM dbo.fnilceler('06') AS T;
+SELECT T.* FROM dbo.fnilceler(null) AS T;
+
+--veya alttaki gibi sadece istediðimiz sütunlarýn olmasýný hatta yerleri deðiþtirerek isteyebiliriz
+
+SELECT
+    T.IlceAdi,  -- T, fonksiyondan dönen sanal tablonun takma adýdýr (alias).
+    T.ilAdi
+FROM
+    dbo.fnilceler('06') AS T; -- '06' metin (varchar) olduðu için týrnak içinde gönderilir.
+
