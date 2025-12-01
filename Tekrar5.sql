@@ -302,34 +302,14 @@ End
 
 --IN LINE Table Valued Function
 
-if exists(select * from sys.objects where name= 'fnilceler' and Type='FN')
-drop function fnilceler
-go
 
-create function fnilceler(@ilkodu varchar)
-returns table
-as
-
-return
-select ic.Id , ic.ilkodu,
-(select i.adi from iller i where i.ilkodu= ic.ilkodu) as iladi,
-ic.adi as ilceadi
-from ilceler ic where ic.ilkodu= isnull(@ilkodu, ic.ilkodu)
-
-
-
-
-
-
-
-
-
-
-
+--Bu alt kýsým kýsým, kodun tekrar çalýþtýrýlabilir olmasýný saðlar. 
 
 if Exists(Select * from sys.objects Where name = 'fnilceler' and Type = 'IF')
 Drop Function fnilceler
 Go
+
+--fonksiyonu kuralým
 
 Create Function fnilceler(@ilkodu varchar(3))
 Returns Table
@@ -348,7 +328,7 @@ from ilceler ic WHERE ic.ilkodu = ISNULL(@ilkodu, ic.ilkodu) -- eðer fonksiyona 
 -- FONKSÝYONU çaðýrýrken select dbo.fnilceler ... þeklinde yapamýyoruz çünkü bu tablo deðerli bir fonksiyon
 
 SELECT T.* FROM dbo.fnilceler('06') AS T;
-SELECT T.* FROM dbo.fnilceler(null) AS T;
+SELECT T.* FROM dbo.fnilceler(null) AS T Order by t.ilAdi, t.IlceAdi;
 
 --veya alttaki gibi sadece istediðimiz sütunlarýn olmasýný hatta yerleri deðiþtirerek isteyebiliriz
 
@@ -357,4 +337,73 @@ SELECT
     T.ilAdi
 FROM
     dbo.fnilceler('06') AS T; -- '06' metin (varchar) olduðu için týrnak içinde gönderilir.
+
+
+
+--*************************Multi-Statement Tablo Deðerli Fonksiyon (Multi-Statement Table-Valued Function - mTVF) **********************************
+
+if Exists(Select * From sys.objects Where name = 'fnMultiStatement' and type = 'TF')
+DROP function fnMultiStatement
+Go
+
+Create Function fnMultiStatement()
+Returns @veriler Table(Id int identity,
+						Kod varchar(5),
+						Tanim Varchar(20))
+
+As
+Begin
+	insert into @veriler Values('99', 'Bizim Deðer')
+
+	insert into @veriler 
+	Select ilkodu, Adi From iller Order By Adi
+    --Bu sonuç kümesindeki ilkodu ve Adi sütunlarý, @veriler tablosunun Kod ve Tanim sütunlarýna eklenir.
+    --ilk  kod ve taným 99 bizim deðer olcak gerisi ilkodu ve adi olanlarý alacak
+
+	return
+END
+
+Select * from dbo.fnMultiStatement() 
+
+
+--***************************** WHÝLE DÖNGÜSÜ *****************************
+
+Declare @sayac int, @bitis int, 
+		@id int,
+		@ad varchar(25),
+		@soyad varchar(25)
+
+SET @sayac = (Select Min(Id) From Personel)
+SET @bitis = (Select Max(Id) From Personel)
+
+
+While(@sayac <= @bitis)
+Begin --while döngüsünün baþlangýcýný belirtir
+	Select @id = Null, @ad = Null, @soyad = Null
+
+	if Exists (Select Id From Personel Where Id = @sayac)
+	Begin --IF koþulunun saðlandýðý zaman çalýþtýrýlacak kod bloðunu tanýmlar.
+		Select @id = p.Id, @ad = p.Ad, @soyad = p.Soyad from Personel p Where p.Id = @sayac
+		Print CONCAT('Personel Id:', @id, ' ', @ad, ' ', @soyad)
+	END  -- IF bitiþi
+
+	Set @sayac += 1
+
+END  -- While bitiþi
+
+/*
+Deðiþkenlerin Temizlenmesi: Select @id = Null, @ad = Null, @soyad = Null ifadesi, 
+olasý önceki döngü verilerinin kalmamasý için deðiþkenleri temizler.
+if Exists (...): Bu, döngüdeki kritik bir kontrol noktasýdýr. Personel tablosunda @sayac deðerine sahip bir Id olup olmadýðýný kontrol eder.
+
+Neden Gerekli?: Eðer Personel tablosunda Id'ler arasýnda boþluklar varsa (örneðin 5 Id'sinden sonra 10 Id'sine geçiliyorsa), 
+bu kontrol boþ Id'ler için gereksiz iþlem yapýlmasýný önler.
+
+CONCAT (Concatenate) SQL Server'da kullanýlan bir metin birleþtirme (String Concatenation) fonksiyonudur.
+
+Ýþlevi: Birden fazla metin ifadesini veya farklý veri tiplerini ( Id, boþluk, Ad, boþluk, Soyad )tek bir dize halinde birleþtirir.
+
+Avantajý: Geleneksel olarak kullanýlan + operatörünün aksine, CONCAT fonksiyonu NULL (boþ) deðerleri otomatik olarak 
+boþ metin ('') olarak kabul eder ve bu sayede birleþtirme iþlemi NULL nedeniyle kesintiye uðramaz.
+*/
 
