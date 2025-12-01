@@ -577,7 +577,7 @@ Begin
 	else
 	Begin
 		set @sayac +=1
-		continue  --CONTINUE komutu, kendisinden sonra gelen tüm kod satýrlarýnýn o adým için atlanmasýný emreder.  en baþa döner
+		continue  --CONTINUE komutu, kendisinden sonra gelen tüm kod satýrlarýnýn o adým için atlanmasýný emreder.  en baþa döner(while)
 	END
 	
 	print 'MERHABA'
@@ -641,7 +641,7 @@ Begin -- {
 	set @sayac +=1
 
 	if(@tektop >= 11 OR @cifttop >= 12)
-	break
+	break  -- while döngüsü biter
 	--return --SONLANDIR ve ÇIK
 
 END -- } While
