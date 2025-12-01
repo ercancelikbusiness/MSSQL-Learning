@@ -562,3 +562,91 @@ Go
  --execute sp_siparissatirlari @p_orderno = 1
 
 Go
+
+--**************** while örnekler *******************************
+
+--1 den 100 e kadar olan sayýlardan 3 ve 4 tam bölünen sayýlarý ekrana yazdýrsýn
+Declare @sayac int = 0
+
+While(@sayac <= 100)
+Begin
+	if(@sayac % 3 = 0 AND @sayac % 4 = 0)
+	Begin
+		print @sayac
+	END
+	else
+	Begin
+		set @sayac +=1
+		continue  --CONTINUE komutu, kendisinden sonra gelen tüm kod satýrlarýnýn o adým için atlanmasýný emreder.  en baþa döner
+	END
+	
+	print 'MERHABA'
+
+
+	set @sayac +=1
+
+End
+
+
+-- 1 den 10 a kadar çift sayýlarý bul
+
+DECLARE @sayac INT = 0;
+DECLARE @bitis INT = 10;
+
+PRINT '--- 1''den 10''a Kadar Çift Sayýlar Listesi ---';
+
+WHILE (@sayac < @bitis)
+BEGIN
+    -- 1. Sayaç artýrýlýr (Döngüye baþlamadan önce artýrmak pratik bir yaklaþýmdýr)
+    SET @sayac += 1;
+
+    -- 2. Koþul Kontrolü (Tek sayý mý?)
+    IF (@sayac % 2 != 0) -- Eðer sayý tek ise (2'ye bölümünden kalan 0 deðilse)
+    BEGIN
+        PRINT CONCAT('ATLANDI: ', @sayac, ' (Tek Sayý)');
+        CONTINUE; --  CONTINUE: Bu noktadan sonraki kodlarý atla ve döngünün baþýna dön.
+    END
+
+    -- 3. Ýþlem (Sadece Çift Sayýlar Buraya Ulaþýr)
+    PRINT CONCAT('ÝÞLENDÝ: ', @sayac, ' (Çift Sayý)');
+    
+    -- Baþka iþlemler burada yapýlabilirdi (UPDATE, INSERT vb.)
+
+END
+
+
+
+--1 den 10 a kadar olan sayýlarý ekrana yazdýralým
+-- Tek ve Çift sayýlarýn toplamlarýný ayrý ayrý bulup yazdýralým
+-- Tek toplam 11 veya çift Toplam 12 den büyük eþit ise Döngüden ÇIKILSIMASINI SAÐLAYALIM
+
+Declare @sayac int = 1, @tektop int = 0, @cifttop int = 0
+
+--While(@sayac <= 10 AND @tektop < 11 AND @cifttop < 12)
+While(@sayac <= 10 )
+Begin -- {
+	print Concat('sayac: ', @sayac)
+
+	if(@sayac % 2 = 0)
+	Begin
+		set @cifttop += @sayac
+		--print 'Çift'
+	End--if
+	Else
+		Set @tektop +=@sayac
+
+
+--print Concat('TT: ', @tektop)
+--print Concat('ÇT: ', @cifttop)	
+	set @sayac +=1
+
+	if(@tektop >= 11 OR @cifttop >= 12)
+	break
+	--return --SONLANDIR ve ÇIK
+
+END -- } While
+
+
+print '---------------------'
+print Concat('Tek Toplam: ', @tektop)
+print Concat('Çift Toplam: ', @cifttop)
