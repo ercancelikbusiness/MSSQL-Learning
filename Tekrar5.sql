@@ -407,3 +407,158 @@ Avantajý: Geleneksel olarak kullanýlan + operatörünün aksine, CONCAT fonksiyonu 
 boþ metin ('') olarak kabul eder ve bu sayede birleþtirme iþlemi NULL nedeniyle kesintiye uðramaz.
 */
 
+
+
+--******************* Cursor iþlemler **********************
+
+--bu kýsým detaylý analizi daha sonra güncelleyeceðim
+
+Select * From Personel
+--CURSOR
+--Bütün personellerin üzerinde Tek Tek Gezerek Gerekli Diðer (Detay) iþlemleri göz önüne alarak
+--Zamlý Maaþ Hesabýný yapan Uygulama
+Declare
+@id int, @cinsiyet varchar(1), @maas float, @depkodu varchar(5), @dtarihi date,
+@zaamliMaas Float
+
+Declare crsperson CURSOR 
+FOR Select p.Id, p.Cinsiyet, p.Maas, p.DepKodu, p.DTarihi from Personel p Where Id = 9
+Open crsperson
+
+FETCH NEXT FROM crsperson INTO @id, @cinsiyet, @maas, @depkodu, @dtarihi
+Print Concat('@@fetch_status KODU: ', @@fetch_status)
+
+While (@@fetch_status = 0)-- 0(Baþarýlý), 2 Bir Hata veya , (-1) (Kayýt Sonu) Boþ Veri Seti
+Begin
+	print Concat_ws(' ','Personel Verileri Id:', @id, 'Cinsiyet:',@cinsiyet)
+	set @zaamliMaas = @maas * 0.80
+	--Diðer Detay iþlemler
+	Update Personel set Maas = @zaamliMaas Where Id = @id
+
+	FETCH NEXT FROM crsperson INTO @id, @cinsiyet, @maas, @depkodu, @dtarihi
+	Print Concat('@@fetch_status While: ', @@fetch_status)
+END
+
+close crsperson -- Cursor Nesnesini KAPAT
+Deallocate crsperson -- Cursor Nesnesini BELLEKTEN TAMAMEN SÝL
+
+
+
+Select * From Personel
+
+--*********************CURSOR dEvam ***************************************
+--bu kýsým daha sonra çalýþýlacak güncellenecek
+
+--DROP PROC if Exists spMaasHesapla
+if Exists(Select * from sys.objects Where Name = N'spMaasHesapla' AND Type = 'P')
+DROP PROC  spMaasHesapla
+GO
+
+Create PROCEDURE spMaasHesapla @p_zamorani smallint, @p_sicilno varchar(15), @p_depkodu varchar(5)
+AS
+BEGIN
+
+	Declare
+	@id int, @cinsiyet varchar(1), @maas float, @depkodu varchar(5), @dtarihi date,
+	@zaamliMaas Float
+
+	Declare crsperson CURSOR 
+	FOR 
+	Select p.Id, p.Cinsiyet, p.Maas, p.DepKodu, p.DTarihi 
+	from Personel p 
+	Where 
+	p.sicilno = ISNULL(@p_sicilno, p.Sicilno)
+	AND p.DepKodu = ISNULL(@p_depkodu, p.DepKodu)
+
+	Open crsperson
+
+	FETCH NEXT FROM crsperson INTO @id, @cinsiyet, @maas, @depkodu, @dtarihi
+	Print Concat('@@fetch_status KODU: ', @@fetch_status)
+
+	While (@@fetch_status = 0)-- 0(Baþarýlý), 2 Bir Hata veya , (-1) (Kayýt Sonu) Boþ Veri Seti
+	Begin
+		print Concat_ws(' ','Personel Verileri Id:', @id, 'Cinsiyet:',@cinsiyet)
+		set @zaamliMaas = (@maas * @p_zamorani/100) + @maas
+		--Diðer Detay iþlemler
+		Update Personel set Maas = @zaamliMaas Where Id = @id
+		if @id >= 2
+		RETURN -99
+
+		FETCH NEXT FROM crsperson INTO @id, @cinsiyet, @maas, @depkodu, @dtarihi
+		Print Concat('@@fetch_status While: ', @@fetch_status)
+	END
+
+	close crsperson -- Cursor Nesnesini KAPAT
+	Deallocate crsperson -- Cursor Nesnesini BELLEKTEN TAMAMEN SÝL
+
+	Select * From Personel
+
+	Return 0
+
+END -- PROC
+
+GO
+--EXECUTE
+Declare @sonuc int 
+
+  EXECute @sonuc = spMaasHesapla 40,Null, 'D1'
+
+Print @sonuc
+
+
+-- *********************************** CURSOR devam ************************
+-- yine burasýda daha sonra analiz edilip güncellenecek
+
+Drop Proc if Exists sp_SiparisSatirlari
+Go
+
+Create Procedure sp_SiparisSatirlari @p_orderno int
+AS
+Begin --Proc
+
+	Declare  @orderno int, @productno int, @quntity float, @listprice float,
+	@sayac int = 0
+	--Set @p_orderno = 1
+	--Select * from orders Where order_id = @orderno
+	--Select order_id, product_id, quantity, list_price from orderitems Where order_id = 1
+	--DEFAULT Cursor Settings Value: LOCAL - FORWARD_ONLY - READ_ONLY
+
+	Declare siparis_satir Cursor LOCAL SCROLL DYNAMIC READ_ONLY -- LOCAL - FORWARD_ONLY - READ_ONLY 
+	FOR
+	Select order_id, product_id, quantity, list_price from orderitems Where order_id = @p_orderno
+
+	OPEN siparis_satir
+
+	FETCH NEXT FROM siparis_satir INTO @orderno, @productno, @quntity, @listprice
+
+	While(@@FETCH_Status = 0)
+	Begin
+	
+		print Concat('@@FETCH_Status: ', @@FETCH_Status, ' URUN_No:', @productno, ' Fiyat: ', @listprice, ' Sayac:', @sayac)
+		Declare @tutar float
+		Set @tutar = @quntity * @listprice
+
+		--Print 'TUTAR: ' + Cast(@tutar as varchar)
+		UPDATE orderitems Set quantity = quantity + 1 Where order_id = @orderno AND product_id = @productno
+
+		if(@productno = 10 and @sayac <= 2)
+		Begin
+			Set @sayac +=1;
+			FETCH PRIOR FROM siparis_satir INTO @orderno, @productno, @quntity, @listprice
+			print 'Buraya Geldi'
+		END
+		ELSE
+		FETCH NEXT FROM siparis_satir INTO @orderno, @productno, @quntity, @listprice
+	END -- While
+
+	CLOSE siparis_satir
+	DEALLOCATE siparis_satir -- BELLEKTEN SÝL / YOK ET
+
+	Select * from orderitems Where order_id = @p_orderno
+END -- PROC
+
+Go
+--Execute veya Exec
+ --execute sp_siparissatirlari @p_orderno = 1
+
+Go
