@@ -367,6 +367,7 @@ Select * from dbo.fnMultiStatement()
 
 
 --***************************** WHÝLE DÖNGÜSÜ *****************************
+--personeldekileri while döngüsüyle yazdýrma
 
 Declare @sayac int, @bitis int, 
 		@id int,
@@ -650,3 +651,47 @@ END -- } While
 print '---------------------'
 print Concat('Tek Toplam: ', @tektop)
 print Concat('Çift Toplam: ', @cifttop)
+
+
+
+--***************************** WHÝLE DÖNGÜSÜ önceki örnek tekrar *****************************
+--personeldekileri while döngüsüyle yazdýrma
+
+Declare @sayac int, @bitis int, 
+		@id int,
+		@ad varchar(25),
+		@soyad varchar(25)
+
+SET @sayac = (Select Min(Id) From Personel)
+SET @bitis = (Select Max(Id) From Personel)
+
+
+While(@sayac <= @bitis)
+Begin --while döngüsünün baþlangýcýný belirtir
+	Select @id = Null, @ad = Null, @soyad = Null
+
+	if Exists (Select Id From Personel Where Id = @sayac)
+	Begin --IF koþulunun saðlandýðý zaman çalýþtýrýlacak kod bloðunu tanýmlar.
+		Select @id = p.Id, @ad = p.Ad, @soyad = p.Soyad from Personel p Where p.Id = @sayac
+		Print CONCAT('Personel Id:', @id, ' ', @ad, ' ', @soyad)
+	END  -- IF bitiþi
+
+	Set @sayac += 1
+
+END  -- While bitiþi
+
+/*
+Deðiþkenlerin Temizlenmesi: Select @id = Null, @ad = Null, @soyad = Null ifadesi, 
+olasý önceki döngü verilerinin kalmamasý için deðiþkenleri temizler.
+if Exists (...): Bu, döngüdeki kritik bir kontrol noktasýdýr. Personel tablosunda @sayac deðerine sahip bir Id olup olmadýðýný kontrol eder.
+
+Neden Gerekli?: Eðer Personel tablosunda Id'ler arasýnda boþluklar varsa (örneðin 5 Id'sinden sonra 10 Id'sine geçiliyorsa), 
+bu kontrol boþ Id'ler için gereksiz iþlem yapýlmasýný önler.
+
+CONCAT (Concatenate) SQL Server'da kullanýlan bir metin birleþtirme (String Concatenation) fonksiyonudur.
+
+Ýþlevi: Birden fazla metin ifadesini veya farklý veri tiplerini ( Id, boþluk, Ad, boþluk, Soyad )tek bir dize halinde birleþtirir.
+
+Avantajý: Geleneksel olarak kullanýlan + operatörünün aksine, CONCAT fonksiyonu NULL (boþ) deðerleri otomatik olarak 
+boþ metin ('') olarak kabul eder ve bu sayede birleþtirme iþlemi NULL nedeniyle kesintiye uðramaz.
+*/
