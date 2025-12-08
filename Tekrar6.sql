@@ -98,6 +98,91 @@ select pr.*,
 from production.products pr
 
 
+--4. En Çok ürüne sahip olan Markayý getiren SQL
+
+--öncelikle hepsini sayýlara göre listeleyen kodu yazalým
+
+Select  p.brand_id, 
+(Select b.brand_name From production.brands b Where b.brand_id = p.brand_id) as Marka, 
+count(*) as UrunSayisi 
+From production.products p
+GROUP BY p.brand_id
+ORDER BY UrunSayisi DESC
+
+--þimdi bunu bir tabloya atalým
+if exists(Select * from tempdb.sys.objects where name LIKE '#tmpsonuc%' and type = 'U')
+DROP Table #tmpsonuc
+
+Select  p.brand_id, 
+(Select b.brand_name From production.brands b Where b.brand_id = p.brand_id) as Marka, 
+count(*) as UrunSayisi into #tmpsonuc    -- olay bu satýrda
+From production.products p
+GROUP BY p.brand_id
+ORDER BY UrunSayisi DESC
+
+Select * from #tmpsonuc
+
+
+
+--þimdi max olaný tablodan alalým
+
+Select  p.brand_id, (Select b.brand_name From production.brands b Where b.brand_id = p.brand_id) as Marka, 
+count(*) as UrunSayisi 
+From production.products p
+GROUP BY p.brand_id
+HAVING count(*) = (Select MAX(UrunSayisi) from #tmpsonuc )
+ORDER BY UrunSayisi DESC
+
+--yada sadece aþaðýdaki gibi yapýlabilir ***************************
+select p.brand_id, count(*) as ürünsayisi   from production.products p group by p.brand_id  
+having count(*) =(select top 1 count(*) as a from production.products p2 group by p2.brand_id order by a desc)
+
+--alternatif
+
+Select  p.brand_id, (Select b.brand_name From production.brands b Where b.brand_id = p.brand_id) as Marka, 
+count(*) as UrunSayisi 
+From production.products p
+GROUP BY p.brand_id
+HAVING count(*) = (Select TOP 1 count(*) as fiyat From production.products Group by brand_id ORDER BY fiyat DESC )
+ORDER BY UrunSayisi DESC
+
+-- bir kategoriye ait en yüksek fiyatlý 2 ürünü listeleyen fonksiyon 
+
+DROP Function if exists fnEnYuksek -- INLINE FUNCTION
+GO
+Create Function fnEnYuksek(@cid int)
+RETURNS Table
+AS
+RETURN
+Select TOP 2 * from production.products 
+WHERE category_id = @cid ORDER BY list_price DESC
+
+-- Select * FROM dbo.fnEnYuksek(3)
+
+
+----- cross
+
+Select * from production.categories c
+CROSS APPLY
+(Select * from dbo.fnEnYuksek(c.category_id) ) as x
+
+
+
+
+
+
+
+Select * from production.categories c
+CROSS APPLY
+(	Select TOP 2 * from production.products 
+	WHERE category_id = c.category_id ORDER BY list_price DESC) as x
+
+
+
+
+
+
+
 
 
 
