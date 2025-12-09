@@ -143,8 +143,17 @@ Select  p.brand_id, (Select b.brand_name From production.brands b Where b.brand_
 count(*) as UrunSayisi 
 From production.products p
 GROUP BY p.brand_id
-HAVING count(*) = (Select TOP 1 count(*) as fiyat From production.products Group by brand_id ORDER BY fiyat DESC )
+HAVING count(*) = (Select TOP 1 count(*) as a  From production.products Group by brand_id  order by  a desc )
 ORDER BY UrunSayisi DESC
+
+--S: En yüksek Maas verisine sahip olan personel/personelleri getiren SQL( ayný maaþa sahip birçok  insan olabilir top kullanýlmaz )
+
+--tabloyu farklý bir tabloya kopyalama yapalým:
+
+select   p.Maas as MaxMaas into #MaxMaas  from Personel p order by p.Maas desc  -- #MaxxMaas tablosuna MaxMaas takma adýyla  verileri attýk 
+
+select p.*  from Personel p  where p.Maas = (select  max(MaxMaas) from #MaxMaas ) -- tablodaki max maasý seçtik
+
 
 -- bir kategoriye ait en yüksek fiyatlý 2 ürünü listeleyen fonksiyon 
 

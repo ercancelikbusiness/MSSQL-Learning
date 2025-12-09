@@ -93,6 +93,9 @@ HAVING
 
      --s4: adýnda e veya h geçen personellerin departmanlara göre sayýlarýný getiren sql
 
+
+
+
      select d.Adi, COUNT(*) 
 from Personel p  inner join Departmanlar as d on d.Kodu=p.DepKodu
 group by d.Adi, p.Cinsiyet  
@@ -173,6 +176,7 @@ select  distinct p.Maas from Personel p -- distinct  birþeyden fazla varsa onu t
 
 --S1: Personel verilerini departman isimleri ile birlikte getiren SQL
 
+
 select p.*, d.Adi from personel p  left join Departmanlar as d on d.Kodu=p.DepKodu -- bunla çözdük
 
 -- aþaðýdaki sorgula ile çýktýlar nasýl oluyor anla yani bir sütun yazýnca tablodaki o sütuna ait hepsi geliyor
@@ -218,6 +222,19 @@ select i.*, ( select iller.adi  from iller where iller.ilkodu=i.ilkodu  ) as ilI
 select ilceler.Id,ilceler.ilkodu, (select iller.adi  from iller where iller.ilkodu=ilceler.ilkodu)as ilIsýmleri ,ilceler.adi  from ilceler 
 
 --S3: En yüksek Maas verisine sahip olan personel/personelleri getiren SQL( ayný maaþa sahip birçok  insan olabilir top kullanýlmaz )
+
+-- ÖZEL ÇÖZÜMLER:--------------------------------
+--tabloyu farklý bir tabloya kopyalama yapalým:
+
+select   p.Maas as MaxMaas into #MaxMaas  from Personel p order by p.Maas desc  -- #MaxxMaas tablosuna MaxMaas takma adýyla  verileri attýk 
+
+select p.*  from Personel p  where p.Maas = (select  max(MaxMaas) from #MaxMaas ) -- tablodaki max maasý seçtik
+
+--alternatif çözüm:
+
+select p.*  from Personel p  where p.Maas=(select top 1 p.Maas from Personel p order by p.Maas desc)
+
+---------------------- ÖZEL ÇÖzümler yukardaydý ------------------------------------------
 
 -- önce alttaki kodlarýn farklarýný anla  Ercan Diyince ercanla ilgili satýrýn  tüm sütunlarýný getiriyor 
 select p.* from Personel p  where p.Ad = 'Ercan'
@@ -302,6 +319,8 @@ devam ediyor.
 
 --s5: ortalama maaþýn altýnda ücret alan personelleri getiren sql
 
+
+
 /*
 Bu, SQL'deki en klasik ve en güzel sorulardan biridir.
 
@@ -329,7 +348,8 @@ birþey yapamýyoruz ortalama alamaz çünkü ortalama için tek tek tüm maaslar hesap
 
 
 
-select  p.*  from personel p    where p.Maas< (Select SUM(p.Maas)/COUNT(p.Id)  from Personel p)
+select  p.*  from personel p    where p.Maas< (Select SUM(p.Maas)/COUNT(p.Id)  from Personel p) -- subq yapmasaydýn whereyi böyle yapamazdýn
+-- yani where <  SUM(p.Maas)/COUNT(p.Id)  yapýlamaz  < den sonra  tek bir deðer yazmalýyýz gibi düþün
 
 --burda iþlemi bölmüþ olduk whereye sadece satýr satýr kontrol etmek düþtü örneðin  getirmesi gereken maaþ ortlama maasýn altýndakiler
 --dolayýsýyla her personelin maaþý ile ort maaþý kýyasla ve onu getirir veya getirmez p.* da satýr satýr çalýþcaktýr yani senkron
