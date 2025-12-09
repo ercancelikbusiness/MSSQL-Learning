@@ -4,6 +4,8 @@
 select d.Adi, COUNT(*) as PersonelSAyisi  from personel p inner join Departmanlar as d on p.DepKodu=d.Kodu 
 group by d.Adi having COUNT(*)>=4
 
+
+
 -- inner join kullandýgýmýz için DepKodu null olanlar zaten birleþime girmedi
 -- kýsaca selectten sonrakiler sadece gösterimdir.. having izin verdiði sürece çýkacaklardýr mesela selectten sonra count yapmasaydýk bile
 --having ayný yazýlýrdý alttaki çözümde bunu anlayacaksýn yani önceliðini from'dan sonraki kýsýmlara ver herzaman 
@@ -46,6 +48,16 @@ HAVING
 
 
     --S2: Cinsiyeti Erkek olan personellerin departmanlara göre sayýlarýný getiren sql
+
+    select * from personel
+
+    select  p.DepKodu, count(*) from Personel p where p.Cinsiyet='E'  group by p.Cinsiyet, p.DepKodu
+
+
+    select  d.Adi, count(*) from Personel p inner join Departmanlar as d on d.Kodu=p.DepKodu
+    where p.Cinsiyet='E'  group by d.Adi 
+
+
 
     select d.Adi, COUNT(p.Cinsiyet) as ErkekSayýsý from   Personel p inner join Departmanlar as d on d.Kodu=p.DepKodu
     group by d.Adi, p.Cinsiyet having p.Cinsiyet='E'
