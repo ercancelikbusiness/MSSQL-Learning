@@ -379,6 +379,8 @@ select i.* from iller i
 select ic.* from ilceler ic
 
 
+
+
 select i.*,(select COUNT(*) from ilceler ic where ic.ilkodu = i.ilkodu) as ilceSayisi  from iller i
 
 --s7 bütün departmanlarý personel sayýlarý ile birlikte getiren sql
