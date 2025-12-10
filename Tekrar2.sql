@@ -496,6 +496,7 @@ where i.adi='Ankara'or i.adi='Adana'or i.adi='Bayburt'or i.adi='Malatya'
 select i.* from iller i
 select ic.* from ilceler ic
 
+
 select i.adi   from iller i inner join ilceler ic on i.ilkodu=ic.ilkodu group by i.adi
 
 -- inner join eþleþme olmayanlarý silip atýyor idi yani il kodu 03 olan bir il  03=ic.kodu burda sonuc yok ise direkt onu görmezden gelir
@@ -532,6 +533,9 @@ select 'asdjkad'  from iller i
 
 --alttaki kodu anlamak için altýna yaptýðým açýklama sonrasý  = lik olmayan bir örnek yazýcam  olayý daha iyi anlarsýn
 select i.adi  from iller i where exists  (select 1 from ilceler ic  where  ic.ilkodu=i.ilkodu)
+select i.adi from iller i where   exists (select distinct 1 from ilceler ic where ic.ilkodu=i.ilkodu)
+
+
 /*
 þimdi exists ile bu soru bu þekilde saðlýklý çözülür en doðru çözüm inner join sonrada exists dir
 burda yaðtýðýmýz þey þu iller tablosundaki tüm il adlarýný  where filtresinden geçerse yazdýr  dedik ama where den sonra birde
@@ -558,12 +562,24 @@ select i.adi  from iller i where exists  (select 1 from ilceler ic  )
 
 select p.* from Personel p
 
+select d.Adi  from Departmanlar d inner join Personel p on p.DepKodu=d.Kodu group by d.Adi
+
+select d.Adi  from Departmanlar d where d.Kodu in (select distinct p.DepKodu from Personel p )
+
+select d.Adi  from Departmanlar d where d.Kodu in (select  p.DepKodu from Personel p ) 
+
+select d.Adi  from Departmanlar d where exists (select distinct 1 from Personel p where p.DepKodu=d.Kodu) -- distinct gerek yok
+--çünkü zaten ilk önce departmanlarý yazdýk oda bilgi iþlemde 1 tane bile where yakalasa ismi yazýlacak zaten sonra öteki departmana
+--geçecek
+
 select d.Adi from Departmanlar d where exists (select 1 from Personel p where p.DepKodu=d.Kodu)
 
 --  ana sorgu departman adlarýný yazdýr diyor  ama where filtresi var o  ilk yazýlacak departmaný filtreye sokar Bilgi iþlem
 --alt sorguda d.Kodu istendiði için bilgi iþlemin d.Kodu D1 diyor   p.DepKodu=D1 mevcut olacaðý için alt sorgu true döner ve bilgi iþlm yazar
 
 --SORU: sadece ilçesi olmayan illeri getiren sql
+
+select i.adi from iller i where not exists  (select  distinct 1 from ilceler ic  where ic.ilkodu=i.ilkodu )
 
 select  i.adi from iller i where  not exists (select 1 from ilceler ic where ic.ilkodu=i.ilkodu)
 -- þimdi burda ilcesi olmayanlarý istiyor dolayýsýyla ilcesi  olanlar true dönecektir olmayanlar false
