@@ -565,6 +565,7 @@ select p.* from Personel p
 select d.Adi  from Departmanlar d inner join Personel p on p.DepKodu=d.Kodu group by d.Adi
 
 select d.Adi  from Departmanlar d where d.Kodu in (select distinct p.DepKodu from Personel p )
+--not: where d.Kodu = deðilde in yapma nedenimiz () içindeki veriler her satýrda deðiþecek o yüzden = kullanamayýz
 
 select d.Adi  from Departmanlar d where d.Kodu in (select  p.DepKodu from Personel p ) 
 

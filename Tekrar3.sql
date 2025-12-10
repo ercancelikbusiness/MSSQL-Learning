@@ -99,6 +99,9 @@ CREATE TABLE Personel (
     FOREIGN KEY (BagliDepKodu) REFERENCES Departmanlar(Kodu) -- Departmanlar tablosu'nda BagliDepKodu sütunu oldugðunu düþün
 );
 
+--NOT: eðer sonradan anahtarý ekliyor olsaydýk alter table Personel diyip foreign key (bagliDepKodu) references Departmanlar(Kodu)
+
+
 -- 'Bilgi Ýþlem' (D1) departmanýna bir personel ekleyelim
 INSERT INTO Personel (Ad, Soyad, Email, Maas, BagliDepKodu)
 VALUES ('Ali', 'Yýlmaz', 'ali.yilmaz@sirket.com', 75000.00, 'D1');
