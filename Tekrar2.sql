@@ -385,6 +385,7 @@ select i.*,(select COUNT(*) from ilceler ic where ic.ilkodu = i.ilkodu) as ilceS
 
 --s7 bütün departmanlarý personel sayýlarý ile birlikte getiren sql
 
+
 select d.* from Departmanlar d
 
 select d.* ,(select COUNT(p.Id) from Personel p where p.DepKodu = d.Kodu) as PerSayisi from Departmanlar d
@@ -399,6 +400,7 @@ select d.* ,(select COUNT(p.Id) from Personel p where p.DepKodu = d.Kodu) as Per
 
 
 --S8: Departmanlarýn tüm bilgilerini personel maas toplamlarý ile birlikte getiren sql
+
 
 select d.* ,(select SUM(p.Maas) from Personel p where p.DepKodu =d.Kodu) as TumCalýsanlarýnMaasToplamý from Departmanlar d
 
@@ -417,6 +419,7 @@ select d.Kodu,d.Adi ,isnull((select SUM(p.Maas) from Personel p where p.DepKodu 
 
 --S9  departmanlarý toplam personel sayýsý ve toplam maas deðerleri ile birlikte getiren sql
 
+ 
 select
 d.*,
 (select COUNT(p.Id) from Personel p where p.DepKodu=d.Kodu)as PerSayisi,
@@ -424,6 +427,7 @@ d.*,
 from Departmanlar d
 
 --s10 ilçe isminde A Harfi geçen illere ait ilçe sayýlarýný getiren sql
+
 
 select ic.* from ilceler ic
 
@@ -449,6 +453,7 @@ GROUP BY
 
 
 
+
 select i.adi , (select COUNT(*)  from ilceler ic where ic.ilkodu=i.ilkodu AND ic.adi like '%a%')AS IlceSayisi from iller i
 --yukardaki kod ayný left join gibi  herþeyi gösterecektir çünkü satýr satýr devam ediyor yani bu left joinli örneðimizle ayný çýktý verir
 -- ilk left joinli örnekte where kullanmak hata demiþtik ama burda kullandýk  çünkü  bu þundan kaynaklanýyor. where komutu subq içinde
@@ -459,6 +464,14 @@ select i.adi , (select COUNT(*)  from ilceler ic where ic.ilkodu=i.ilkodu AND ic
 
 
 --S11  Ankara adana bayburt malatya illerine ait ilçe isminde A harfi geçen illere ait ilçe sayýlarý toplamýný getiren sql
+
+select * from iller i
+select * from ilceler ic
+
+select i.adi,count(*) from iller i left join ilceler ic on i.ilkodu=ic.ilkodu where i.adi in ('Ankara','adana','bayburt','malatya')
+and ic.adi like '%a%' group by i.adi
+
+
 
 select i.adi,(select COUNT(*) from ilceler ic where ic.ilkodu=i.ilkodu and ic.adi like '%a%')  from iller i 
 where i.adi='Ankara'or i.adi='Adana'or i.adi='Bayburt'or i.adi='Malatya'
